@@ -19,7 +19,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
     [CustomEditor(typeof(Subversion15ProviderEditor))]
     [RequiresInterface(typeof(IRemoteProcessExecuter))]
     [RequiresInterface(typeof(IFileOperationsExecuter))]
-    public sealed class Subversion15Provider : MultipleRepositoryProviderBase<SubversionRepository>, IBranchingProvider, IRevisionProvider
+    public sealed class Subversion15Provider : MultipleRepositoryProviderBase<SubversionRepository>, IBranchingProvider, IRevisionProvider, IClientCommandProvider
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SubversionProviderBase"/> class.
@@ -58,7 +58,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             {
                 return Util.CoalesceStr(
                     this.ExePath,
-                    this.Agent.CombinePath(this.Agent.GetBaseWorkingDirectory(), string.Format(@"ExtTemp\{0}\svn.exe", typeof(Subversion15Provider).Assembly.GetName().Name))
+                    this.Agent.CombinePath(this.Agent.GetBaseWorkingDirectory(), string.Format(@"ExtTemp\{0}\Resources\svn.exe", typeof(Subversion15Provider).Assembly.GetName().Name))
                 );
             }
         }
@@ -71,7 +71,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             get
             {
                 return this.Agent
-                    .CombinePath(this.Agent.GetBaseWorkingDirectory(), string.Format(@"ExtTemp\{0}\plink.exe", typeof(Subversion15Provider).Assembly.GetName().Name))
+                    .CombinePath(this.Agent.GetBaseWorkingDirectory(), string.Format(@"ExtTemp\{0}\Resources\plink.exe", typeof(Subversion15Provider).Assembly.GetName().Name))
                     .Replace(@"\", "/");
             }
         }
@@ -219,6 +219,49 @@ namespace Inedo.BuildMasterExtensions.Subversion
             }
         }
 
+        public void ExecuteClientCommand(string commandName, string arguments)
+        {
+            SVN(commandName, arguments);
+        }
+
+        public IEnumerable<ClientCommand> GetAvailableCommands()
+        {
+            using (var stream = typeof(Subversion15Provider).Assembly.GetManifestResourceStream("Inedo.BuildMasterExtensions.Subversion.SvnCommands.txt"))
+            using (var reader = new StreamReader(stream))
+            {
+                var line = reader.ReadLine();
+                while (line != null)
+                {
+                    var commandInfo = line.Split(new[] { '\t' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                    yield return new ClientCommand(commandInfo[0].Trim(), commandInfo[1].Trim());
+
+                    line = reader.ReadLine();
+                }
+            }
+        }
+
+        public string GetClientCommandHelp(string commandName)
+        {
+            try
+            {
+                return SvnHelp(commandName);
+            }
+            catch (Exception e)
+            {
+                return "Help not available for the \"" + commandName + "\" command. The specific error message was: " + e.Message;
+            }
+        }
+
+        public string GetClientCommandPreview()
+        {
+            return string.Format("{{command}} {0} ", BuildArguments(true));
+        }
+
+        public bool SupportsCommandHelp
+        {
+            get { return true; }
+        }
+
         private static void ThrowInvalidRepoUrl(string svnUrl, string targetPath, string remoteUrl)
         {
             throw new InvalidOperationException(string.Format(
@@ -256,6 +299,17 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         private IEnumerable<string> SVN(string command, params string[] args)
         {
+            return this.ExecuteSvnCommand(command, BuildArguments(false, args));
+        }
+
+        private string SvnHelp(string command)
+        {
+            var commandOutput = this.ExecuteSvnCommand("help", command);
+            return string.Join(Environment.NewLine, commandOutput.ToArray());
+        }
+
+        private string BuildArguments(bool obscurePassword, params string[] args)
+        {
             var argBuffer = new StringBuilder();
 
             foreach (var arg in args)
@@ -266,7 +320,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             if (!string.IsNullOrEmpty(this.Username))
                 argBuffer.AppendFormat("--username \"{0}\" ", this.Username);
             if (!string.IsNullOrEmpty(this.Password))
-                argBuffer.AppendFormat("--password \"{0}\" ", this.Password);
+                argBuffer.AppendFormat("--password \"{0}\" ", obscurePassword ? "xxxxx" : this.Password);
 
             if (this.UseSSH)
             {
@@ -277,10 +331,10 @@ namespace Inedo.BuildMasterExtensions.Subversion
                 argBuffer.Append("\"");
             }
 
-            return this.ExecuteClientCommand(command, argBuffer.ToString());
+            return argBuffer.ToString();
         }
 
-        private IEnumerable<string> ExecuteClientCommand(string commandName, string arguments)
+        private IEnumerable<string> ExecuteSvnCommand(string commandName, string arguments)
         {
             var results = this.ExecuteCommandLine(
                 this.SvnExePath,

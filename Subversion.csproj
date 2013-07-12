@@ -126,57 +126,58 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="SvnCommands.txt" />
     <None Include="Licenses\Plink.txt" />
     <None Include="Licenses\Subversion.txt" />
-    <Content Include="plink.exe">
+    <Content Include="Resources\plink.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-DB44-20-win32.dll">
+    <Content Include="Resources\SlikSvn-DB44-20-win32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-libapr-1.dll">
+    <Content Include="Resources\SlikSvn-libapr-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-libaprutil-1.dll">
+    <Content Include="Resources\SlikSvn-libaprutil-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-libeay32.dll">
+    <Content Include="Resources\SlikSvn-libeay32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-libintl-Win32.dll">
+    <Content Include="Resources\SlikSvn-libintl-Win32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-Sasl21-23-win32.dll">
+    <Content Include="Resources\SlikSvn-Sasl21-23-win32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-ssleay32.dll">
+    <Content Include="Resources\SlikSvn-ssleay32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-svn_client-1.dll">
+    <Content Include="Resources\SlikSvn-svn_client-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-svn_delta-1.dll">
+    <Content Include="Resources\SlikSvn-svn_delta-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-svn_diff-1.dll">
+    <Content Include="Resources\SlikSvn-svn_diff-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-svn_fs-1.dll">
+    <Content Include="Resources\SlikSvn-svn_fs-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-svn_ra-1.dll">
+    <Content Include="Resources\SlikSvn-svn_ra-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-svn_repos-1.dll">
+    <Content Include="Resources\SlikSvn-svn_repos-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-svn_subr-1.dll">
+    <Content Include="Resources\SlikSvn-svn_subr-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SlikSvn-svn_wc-1.dll">
+    <Content Include="Resources\SlikSvn-svn_wc-1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="svn.exe">
+    <Content Include="Resources\svn.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -191,6 +192,6 @@
   -->
   <PropertyGroup>
     <PostBuildEvent>if exist $(SolutionDir) cmd /c "del $(SolutionDir)..\..\BuildMaster\ExtensionLib\$(TargetName).bmx"
-if exist $(SolutionDir) $(SolutionDir)..\zip -j $(SolutionDir)..\..\BuildMaster\ExtensionLib\$(TargetName).bmx *.*</PostBuildEvent>
+if exist $(SolutionDir) $(SolutionDir)..\zip -r $(SolutionDir)..\..\BuildMaster\ExtensionLib\$(TargetName).bmx *.*</PostBuildEvent>
   </PropertyGroup>
 </Project>
