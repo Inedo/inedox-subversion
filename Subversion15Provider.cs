@@ -46,7 +46,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
         public override char DirectorySeparator { get { return '/'; } }
         public bool RequiresComment { get { return true; } }
         
-        private new IFileOperationsExecuter Agent { get { return (IFileOperationsExecuter)base.Agent; } }
+        private new IFileOperationsExecuter Agent { get { return (IFileOperationsExecuter)base.Agent.GetService<IFileOperationsExecuter>(); } }
         private string SafePrivateKeyPath { get { return this.PrivateKeyPath.Replace(@"\", "/"); } }
         private bool EffectivelyUsesRepositories { get { return Repositories.Length > 0 && !string.IsNullOrEmpty(Repositories[0].RepositoryPath); } }
 
