@@ -24,6 +24,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
         /// </summary>
         public Subversion15Provider()
         {
+            this.Repositories = new SubversionRepository[0];
         }
 
         [Persistent]
@@ -399,7 +400,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             }
             set
             {
-                this.Repositories = Array.ConvertAll(value, r => (SubversionRepository)r);
+                this.Repositories = Array.ConvertAll(value ?? new RepositoryBase[0], r => (SubversionRepository)r);
             }
         }
     }
