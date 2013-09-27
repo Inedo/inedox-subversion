@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using Inedo.BuildMaster;
@@ -9,7 +10,6 @@ using Inedo.BuildMaster.Extensibility.Providers;
 using Inedo.BuildMaster.Extensibility.Providers.SourceControl;
 using Inedo.BuildMaster.Files;
 using Inedo.BuildMaster.Web;
-using Inedo.Linq;
 
 namespace Inedo.BuildMasterExtensions.Subversion
 {
@@ -17,9 +17,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
         "Subversion",
         "Includes built-in support for SVN v1.8 and earlier.")]
     [CustomEditor(typeof(Subversion15ProviderEditor))]
-    [RequiresInterface(typeof(IRemoteProcessExecuter))]
-    [RequiresInterface(typeof(IFileOperationsExecuter))]
-    public sealed class Subversion15Provider : MultipleRepositoryProviderBase<SubversionRepository>, IBranchingProvider, IRevisionProvider, IClientCommandProvider
+    public sealed class Subversion15Provider : SourceControlProviderBase, IMultipleRepositoryProvider<SubversionRepository>, IBranchingProvider, IRevisionProvider, IClientCommandProvider
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SubversionProviderBase"/> class.
@@ -390,6 +388,19 @@ namespace Inedo.BuildMasterExtensions.Subversion
             }
 
             return CombineSvnPaths(RepositoryRoot, sourcePath);
+        }
+
+        public SubversionRepository[] Repositories { get; set; }
+        RepositoryBase[] IMultipleRepositoryProvider.Repositories
+        {
+            get
+            {
+                return this.Repositories;
+            }
+            set
+            {
+                this.Repositories = (SubversionRepository[])value;
+            }
         }
     }
 }

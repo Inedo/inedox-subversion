@@ -1,10 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Web.UI.WebControls;
-using Inedo.BuildMaster.Agents;
 using Inedo.BuildMaster.Extensibility.Providers;
 using Inedo.BuildMaster.Web.Controls;
 using Inedo.BuildMaster.Web.Controls.Extensions;
-using Inedo.Linq;
 using Inedo.Web.Controls;
 
 namespace Inedo.BuildMasterExtensions.Subversion
@@ -35,14 +34,14 @@ namespace Inedo.BuildMasterExtensions.Subversion
                 return;
             }
 
-            var agent = AgentHelper.CreateNewRemoteProxy(this.EditorContext.ServerId);
+            //var agent = AgentHelper.CreateNewRemoteProxy(this.EditorContext.ServerId);
 
-            if (!string.IsNullOrEmpty(this.txtExePath.Text) && !agent.FileExists(this.txtExePath.Text))
-            {
-                e.Message = "An SVN client was not found at " + this.txtExePath.Text + Environment.NewLine + "This may result in build errors.";
-                e.ValidLevel = ValidationLevels.Warning;
-                return;
-            }
+            //if (!string.IsNullOrEmpty(this.txtExePath.Text) && !agent.FileExists(this.txtExePath.Text))
+            //{
+            //    e.Message = "An SVN client was not found at " + this.txtExePath.Text + Environment.NewLine + "This may result in build errors.";
+            //    e.ValidLevel = ValidationLevels.Warning;
+            //    return;
+            //}
         }
 
         protected override void CreateChildControls()
