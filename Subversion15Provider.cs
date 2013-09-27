@@ -399,7 +399,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             }
             set
             {
-                this.Repositories = (SubversionRepository[])value;
+                this.Repositories = Array.ConvertAll(value, r => (SubversionRepository)r);
             }
         }
     }
