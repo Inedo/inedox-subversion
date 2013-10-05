@@ -155,7 +155,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             
             SVN("copy", svnSourcePath, svnToPath, "-m", comment);
         }
-        public byte[] GetCurrentRevision(string path)
+        public object GetCurrentRevision(string path)
         {
             var svnPath = CreateSvnUriTarget(path);
             return this.GetCurrentRevisionInternal(svnPath);
