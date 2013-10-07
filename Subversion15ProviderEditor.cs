@@ -30,7 +30,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             if (badRepo != null)
             {
                 e.Message = "Repository " + badRepo.SvnRepositoryName + " is invalid because it contains the " + "/" + " character.";
-                e.ValidLevel = ValidationLevels.Error;
+                e.ValidLevel = ValidationLevel.Error;
                 return;
             }
 
