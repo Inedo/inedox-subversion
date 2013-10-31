@@ -176,7 +176,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             string remoteUrl = null;
             try 
             {
-                var lines = SVN("info", targetPath, "--xml");
+                var lines = this.ExecuteSvnCommand("info", BuildArguments(false, new[] { svnUrl, "--xml" }), false);
                 var doc = new XmlDocument();
                 doc.LoadXml(string.Join(Environment.NewLine, lines.ToArray()));
                 var node = doc.SelectSingleNode("//entry/url");
@@ -201,7 +201,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             }
             else
             {
-                SVN("update", svnUrl, targetPath);
+                SVN("update", targetPath);
             }
         }
 
@@ -335,6 +335,11 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         private IEnumerable<string> ExecuteSvnCommand(string commandName, string arguments)
         {
+            return ExecuteSvnCommand(commandName, arguments, true);
+        }
+
+        private IEnumerable<string> ExecuteSvnCommand(string commandName, string arguments, bool logErrors)
+        {
             var results = this.ExecuteCommandLine(
                 this.SvnExePath,
                 commandName + " " + arguments,
@@ -345,7 +350,12 @@ namespace Inedo.BuildMasterExtensions.Subversion
                 this.LogInformation(line);
 
             foreach (var line in results.Error)
-                this.LogError(line);
+            {
+                if (logErrors)
+                    this.LogError(line);
+                else
+                    this.LogDebug(line);
+            }
 
             if (results.ExitCode != 0)
             {
