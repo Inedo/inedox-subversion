@@ -176,7 +176,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             string remoteUrl = null;
             try 
             {
-                var lines = this.ExecuteSvnCommand("info", BuildArguments(false, new[] { svnUrl, "--xml" }), false);
+                var lines = this.ExecuteSvnCommand("info", BuildArguments(BuildArgumentsOption.Normal, new[] { svnUrl, "--xml" }), false);
                 var doc = new XmlDocument();
                 doc.LoadXml(string.Join(Environment.NewLine, lines.ToArray()));
                 var node = doc.SelectSingleNode("//entry/url");
@@ -220,7 +220,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         public void ExecuteClientCommand(string commandName, string arguments)
         {
-            SVN(commandName, arguments);
+            this.ExecuteSvnCommand(commandName, BuildArguments(BuildArgumentsOption.DoNotQuoteArguments, arguments));
         }
 
         public IEnumerable<ClientCommand> GetAvailableCommands()
@@ -253,7 +253,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         public string GetClientCommandPreview()
         {
-            return string.Format("{{command}} {0} ", BuildArguments(true));
+            return string.Format("{{command}} {0} ", BuildArguments(BuildArgumentsOption.ObscurePassword));
         }
 
         public bool SupportsCommandHelp
@@ -298,7 +298,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         private IEnumerable<string> SVN(string command, params string[] args)
         {
-            return this.ExecuteSvnCommand(command, BuildArguments(false, args));
+            return this.ExecuteSvnCommand(command, BuildArguments(BuildArgumentsOption.Normal, args));
         }
 
         private string SvnHelp(string command)
@@ -307,19 +307,24 @@ namespace Inedo.BuildMasterExtensions.Subversion
             return string.Join(Environment.NewLine, commandOutput.ToArray());
         }
 
-        private string BuildArguments(bool obscurePassword, params string[] args)
+        private string BuildArguments(BuildArgumentsOption options, params string[] args)
         {
             var argBuffer = new StringBuilder();
 
             foreach (var arg in args)
-                argBuffer.AppendFormat("\"{0}\" ", arg);
+            {
+                if (options.HasFlag(BuildArgumentsOption.DoNotQuoteArguments))
+                    argBuffer.AppendFormat("{0} ", arg);
+                else
+                    argBuffer.AppendFormat("\"{0}\" ", arg);
+            }
 
             argBuffer.Append("--non-interactive --trust-server-cert ");
 
             if (!string.IsNullOrEmpty(this.Username))
                 argBuffer.AppendFormat("--username \"{0}\" ", this.Username);
             if (!string.IsNullOrEmpty(this.Password))
-                argBuffer.AppendFormat("--password \"{0}\" ", obscurePassword ? "xxxxx" : this.Password);
+                argBuffer.AppendFormat("--password \"{0}\" ", options.HasFlag(BuildArgumentsOption.ObscurePassword) ? "xxxxx" : this.Password);
 
             if (this.UseSSH)
             {
@@ -412,6 +417,11 @@ namespace Inedo.BuildMasterExtensions.Subversion
             {
                 this.Repositories = Array.ConvertAll(value ?? new RepositoryBase[0], r => (SubversionRepository)r);
             }
+        }
+
+        private enum BuildArgumentsOption 
+        {
+            Normal = 0, ObscurePassword = 1, DoNotQuoteArguments = 2
         }
     }
 }
