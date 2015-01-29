@@ -176,7 +176,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             string remoteUrl = null;
             try 
             {
-                var lines = this.ExecuteSvnCommand("info", BuildArguments(BuildArgumentsOption.Normal, new[] { svnUrl, "--xml" }), false);
+                var lines = this.ExecuteSvnCommand("info", BuildArguments(BuildArgumentsOption.Normal, targetPath, "--xml"), false);
                 var doc = new XmlDocument();
                 doc.LoadXml(string.Join(Environment.NewLine, lines.ToArray()));
                 var node = doc.SelectSingleNode("//entry/url");
