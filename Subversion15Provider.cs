@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Xml;
+using System.Xml.Linq;
 using Inedo.BuildMaster;
 using Inedo.BuildMaster.Extensibility.Agents;
 using Inedo.BuildMaster.Extensibility.Providers;
@@ -17,14 +16,13 @@ namespace Inedo.BuildMasterExtensions.Subversion
         "Subversion",
         "Includes built-in support for SVN v1.8 and earlier.")]
     [CustomEditor(typeof(Subversion15ProviderEditor))]
-    public sealed class Subversion15Provider : SourceControlProviderBase, IMultipleRepositoryProvider<SubversionRepository>, IBranchingProvider, IRevisionProvider, IClientCommandProvider
+    public sealed class Subversion15Provider : SourceControlProviderBase, ILocalWorkspaceProvider, IMultipleRepositoryProvider, IBranchingProvider, IRevisionProvider, IClientCommandProvider
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SubversionProviderBase"/> class.
         /// </summary>
         public Subversion15Provider()
         {
-            this.Repositories = new SubversionRepository[0];
         }
 
         [Persistent]
@@ -39,17 +37,16 @@ namespace Inedo.BuildMasterExtensions.Subversion
         public string PrivateKeyPath { get; set; }
         [Persistent]
         public string ExePath { get; set; }
-        [Persistent]
-        public bool UseUpdateInsteadOfExport { get; set; }
-        [Persistent]
-        public bool AlwaysUseCommandLine { get; set; }
 
         public override char DirectorySeparator { get { return '/'; } }
         public bool RequiresComment { get { return true; } }
         
-        private new IFileOperationsExecuter Agent { get { return (IFileOperationsExecuter)base.Agent.GetService<IFileOperationsExecuter>(); } }
-        private string SafePrivateKeyPath { get { return this.PrivateKeyPath.Replace(@"\", "/"); } }
-        private bool EffectivelyUsesRepositories { get { return Repositories.Length > 0 && !string.IsNullOrEmpty(Repositories[0].RepositoryPath); } }
+        public new IFileOperationsExecuter Agent { get { return (IFileOperationsExecuter)base.Agent.GetService<IFileOperationsExecuter>(); } }
+        internal string SafePrivateKeyPath { get { return this.PrivateKeyPath.Replace(@"\", "/"); } }
+        internal bool EffectivelyUsesRepositories 
+        { 
+            get { return this.Repositories != null && this.Repositories.Length > 0 && !string.IsNullOrEmpty(Repositories[0].RemoteUrl); } 
+        }
 
         private string SvnExePath
         {
@@ -65,7 +62,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
         /// Gets the path to the embedded plink.exe in Linux format (/path/to/_WEBTEMP/Subversion/plink.exe) 
         /// because SVN will not accept backslashes in its SSH configuration
         /// </summary>
-        private string PlinkExePath
+        internal string PlinkExePath
         {
             get
             {
@@ -75,65 +72,92 @@ namespace Inedo.BuildMasterExtensions.Subversion
             }
         }
 
+        bool IMultipleRepositoryProvider.DisplayEditor
+        {
+            get { return true; }
+        }
+
+        string IMultipleRepositoryProvider.LabelText
+        {
+            get { return "Relative path:"; }
+        }
+
+        [Persistent(CustomSerializer = typeof(SourceRepositorySerializer))]
+        public SourceRepository[] Repositories { get; set; }
+
         public override void GetLatest(string sourcePath, string targetPath)
         {
-            var svnTarget = CreateSvnUriTarget(sourcePath);
-
-            if (this.UseUpdateInsteadOfExport)
-                this.UpdateLatest(svnTarget, targetPath);
-            else
-                SVN("export", svnTarget, targetPath, "--force");
+            var context = (SvnSourceControlContext)this.CreateSourceControlContext(sourcePath);
+            this.GetLatest(context, targetPath);
         }
+
+        private void GetLatest(SvnSourceControlContext context, string targetDirectory)
+        {
+            this.EnsureLocalWorkspace(context);
+            this.UpdateLocalWorkspace(context);
+            this.ExportFiles(context, targetDirectory);
+        }
+
         public override DirectoryEntryInfo GetDirectoryEntryInfo(string sourcePath)
         {
-            sourcePath = sourcePath ?? string.Empty;
-            var splitPath = sourcePath.Split(new[] { this.DirectorySeparator }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (EffectivelyUsesRepositories)
-            {
-                if (splitPath.Length == 0)
-                {
-                    var subDirs = new DirectoryEntryInfo[Repositories.Length];
-                    for (int i = 0; i < Repositories.Length; i++)
-                        subDirs[i] = new DirectoryEntryInfo(
-                            Repositories[i].RepositoryName,
-                            Repositories[i].RepositoryName,
-                            null,
-                            null);
-                    return new DirectoryEntryInfo(string.Empty, string.Empty, subDirs, null);
-                }
-            }
-
-            var target = CreateSvnUriTarget(sourcePath);
-
-            DirectoryEntryBuilder container;
-            if (splitPath.Length > 0)
-                container = new DirectoryEntryBuilder(splitPath[splitPath.Length - 1]);
-            else
-                container = new DirectoryEntryBuilder(string.Empty);
-
-            string prependPath = string.Empty;
-            if (splitPath.Length > 1)
-                prependPath = string.Join("/", splitPath, 0, splitPath.Length - 1);
-
-            this.GetDirectoryEntryInfo(target, container);
-
-            return container.ToDirectoryEntryInfo(this.DirectorySeparator.ToString(), prependPath, true);
+            var context = (SvnSourceControlContext)this.CreateSourceControlContext(sourcePath);
+            return this.GetDirectoryEntryInfo(context);
         }
+
+        private DirectoryEntryInfo GetDirectoryEntryInfo(SvnSourceControlContext context)
+        {
+            if (this.EffectivelyUsesRepositories && context.PathSpecifiedRepositoryName == null)
+            {
+                return new DirectoryEntryInfo(
+                    string.Empty, 
+                    string.Empty, 
+                    this.Repositories.Select(r => new DirectoryEntryInfo(r.Name, r.Name)), 
+                    null
+                );
+            }
+            else
+            {
+                var results = this.ExecuteSvn("list", context.SvnTargetUrl);
+                var paths = results.Output;
+
+                return new DirectoryEntryInfo(
+                    context.LastSubDirectoryName,
+                    context.RepositoryRelativePath,
+                    paths.Select(p => context.CreateRelativeSystemEntryInfo(p))
+                );
+            }
+        }
+
         public override byte[] GetFileContents(string filePath)
         {
-            var target = CreateSvnUriTarget(filePath);
-            return this.GetFileContentsInternal(target);
+            var context = (SvnSourceControlContext)this.CreateSourceControlContext(filePath);
+            this.EnsureLocalWorkspace(context);
+            this.UpdateLocalWorkspace(context);
+            return this.Agent.ReadFileBytes(context.AbsoluteDiskPath);
         }
+
         public override bool IsAvailable()
         {
             return true;
         }
+        
         public override void ValidateConnection()
         {
             try
             {
-                this.GetCurrentRevisionInternal(CombineSvnPaths(this.RepositoryRoot, this.Repositories[0].RepositoryPath));
+                if (!this.EffectivelyUsesRepositories)
+                {
+                    var context = (SvnSourceControlContext)this.CreateSourceControlContext("/");
+                    this.GetCurrentRevisionInternal(context);
+                }
+                else
+                {
+                    foreach (var repo in this.Repositories)
+                    {
+                        var context = (SvnSourceControlContext)this.CreateSourceControlContext(repo.RemoteUrl);
+                        this.GetCurrentRevisionInternal(context);
+                    }
+                }
             }
             catch (FileLoadException fex)
             {
@@ -148,21 +172,23 @@ namespace Inedo.BuildMasterExtensions.Subversion
                 throw new ConnectionException(ex.Message, ex);
             }
         }
+
         public void Branch(string sourcePath, string toPath, string comment)
         {
-            var svnSourcePath = CreateSvnUriTarget(sourcePath);
-            var svnToPath = CreateSvnUriTarget(toPath);
+            var sourceContext = (SvnSourceControlContext)this.CreateSourceControlContext(sourcePath);
+            var targetContext = (SvnSourceControlContext)this.CreateSourceControlContext(toPath);
             
-            SVN("copy", svnSourcePath, svnToPath, "-m", comment);
+            this.ExecuteSvn("copy", sourceContext.SvnTargetUrl, targetContext.SvnTargetUrl, "-m", comment);
         }
         public object GetCurrentRevision(string path)
         {
-            var svnPath = CreateSvnUriTarget(path);
-            return this.GetCurrentRevisionInternal(svnPath);
+            var context = (SvnSourceControlContext)this.CreateSourceControlContext(path);
+            return this.GetCurrentRevisionInternal(context);
         }
+
         public override string ToString()
         {
-            string repRoot = RepositoryRoot;
+            string repRoot = this.RepositoryRoot;
             if (repRoot != null && repRoot.Length > 20) 
                 repRoot = repRoot.Substring(0, 17) + "...";
 
@@ -171,56 +197,9 @@ namespace Inedo.BuildMasterExtensions.Subversion
                 + Util.ConcatNE(" (Username: ", Username, ")");
         }
 
-        public void UpdateLatest(string svnUrl, string targetPath)
-        {
-            string remoteUrl = null;
-            try 
-            {
-                var lines = this.ExecuteSvnCommand("info", BuildArguments(BuildArgumentsOption.Normal, targetPath, "--xml"), false);
-                var doc = new XmlDocument();
-                doc.LoadXml(string.Join(Environment.NewLine, lines.ToArray()));
-                var node = doc.SelectSingleNode("//entry/url");
-                if (node != null)
-                    remoteUrl = node.InnerText;
-            }
-            catch (InvalidOperationException) 
-            { 
-                /* SVN will return exit code 1 if you use INFO on an uninitialized 
-                 * directory, this is the easiest way to ignore that and
-                 * just perform a CHECKOUT instead of an UPDATE. */ 
-            }
-
-            if (remoteUrl == null)
-            {
-                // perform checkout since remote repo URL can't be found
-                SVN("checkout", svnUrl, targetPath);
-            }
-            else if (!svnUrl.Trim('/').Equals(remoteUrl.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
-            {
-                ThrowInvalidRepoUrl(svnUrl, targetPath, remoteUrl);
-            }
-            else
-            {
-                SVN("update", targetPath);
-            }
-        }
-
-        public void GetDirectoryEntryInfo(string svnSourceUrl, DirectoryEntryBuilder container)
-        {
-            var items = SVN("list", svnSourceUrl);
-
-            foreach (var item in items)
-            {
-                if (item.EndsWith("/"))
-                    container.Directories.Add(item.TrimEnd('/'));
-                else
-                    container.AddFile(item);
-            }
-        }
-
         public void ExecuteClientCommand(string commandName, string arguments)
         {
-            this.ExecuteSvnCommand(commandName, BuildArguments(BuildArgumentsOption.DoNotQuoteArguments, arguments));
+            this.ExecuteSvn(commandName, new SvnArguments(this, arguments) { QuoteArguments = false });
         }
 
         public IEnumerable<ClientCommand> GetAvailableCommands()
@@ -243,7 +222,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
         {
             try
             {
-                return SvnHelp(commandName);
+                return this.SvnHelp(commandName);
             }
             catch (Exception e)
             {
@@ -253,7 +232,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         public string GetClientCommandPreview()
         {
-            return string.Format("{{command}} {0} ", BuildArguments(BuildArgumentsOption.ObscurePassword));
+            return string.Format("{{command}} {0} ", new SvnArguments(this) { ObscurePassword = true });
         }
 
         public bool SupportsCommandHelp
@@ -261,167 +240,140 @@ namespace Inedo.BuildMasterExtensions.Subversion
             get { return true; }
         }
 
-        private static void ThrowInvalidRepoUrl(string svnUrl, string targetPath, string remoteUrl)
+        private int GetCurrentRevisionInternal(SvnSourceControlContext context)
         {
-            throw new InvalidOperationException(string.Format(
-                    "The provider's SVN repository URL \"{0}\" is not the same as the one specified in the metadata for the local "
-                  + "workspace (\"{1}\") at \"{2}\". To use the SVN UPDATE feature, these URLs must match, or an empty directory "
-                  + "should be chosen such that a CHECKOUT will be performed instead.",
-                    svnUrl,
-                    remoteUrl,
-                    targetPath));
-        }
+            var results = this.ExecuteSvn("info", context.SvnTargetUrl, "--xml");
 
-        private byte[] GetCurrentRevisionInternal(string svnUrl)
-        {
-            int revision = 0;
-            var lines = SVN("info", svnUrl, "--xml");
-            var doc = new XmlDocument();
-            doc.LoadXml(string.Join(Environment.NewLine, lines.ToArray()));
-            var node = doc.SelectSingleNode("//commit/@revision") as XmlAttribute;
-            if (node != null)
-                revision = int.Parse(node.Value);
-
-            return BitConverter.GetBytes(revision);
-        }
-
-        private byte[] GetFileContentsInternal(string svnUrl)
-        {
-            var fileName = Path.GetTempFileName();
-            SVN("export", svnUrl, fileName, "--force");
-            var data = File.ReadAllBytes(fileName);
-            try { File.Delete(fileName); }
-            catch { }
-
-            return data;
-        }
-
-        private IEnumerable<string> SVN(string command, params string[] args)
-        {
-            return this.ExecuteSvnCommand(command, BuildArguments(BuildArgumentsOption.Normal, args));
+            var doc = XDocument.Parse(string.Join(Environment.NewLine, results.Output));
+            int revision = (int?)doc.Root.Element("entry").Element("commit").Attribute("revision") ?? 0;
+            
+            return revision;
         }
 
         private string SvnHelp(string command)
         {
-            var commandOutput = this.ExecuteSvnCommand("help", command);
-            return string.Join(Environment.NewLine, commandOutput.ToArray());
+            var results = this.ExecuteSvn("help", command);
+            return string.Join(Environment.NewLine, results.Output);
         }
 
-        private string BuildArguments(BuildArgumentsOption options, params string[] args)
+        private ProcessResults ExecuteSvn(string commandName, params string[] args)
         {
-            var argBuffer = new StringBuilder();
-
-            foreach (var arg in args)
-            {
-                if (options.HasFlag(BuildArgumentsOption.DoNotQuoteArguments))
-                    argBuffer.AppendFormat("{0} ", arg);
-                else
-                    argBuffer.AppendFormat("\"{0}\" ", arg);
-            }
-
-            argBuffer.Append("--non-interactive --trust-server-cert ");
-
-            if (!string.IsNullOrEmpty(this.Username))
-                argBuffer.AppendFormat("--username \"{0}\" ", this.Username);
-            if (!string.IsNullOrEmpty(this.Password))
-                argBuffer.AppendFormat("--password \"{0}\" ", options.HasFlag(BuildArgumentsOption.ObscurePassword) ? "xxxxx" : this.Password);
-
-            if (this.UseSSH)
-            {
-                // --config-option=config:tunnels:ssh="plink.exe -batch -i /path/to/private-key.ppk"
-                argBuffer.AppendFormat(@"--config-option=config:tunnels:ssh=""{0} -batch", this.PlinkExePath);
-                if (!string.IsNullOrEmpty(this.PrivateKeyPath))
-                    argBuffer.AppendFormat(" -i {0}", this.SafePrivateKeyPath);
-                argBuffer.Append("\"");
-            }
-
-            return argBuffer.ToString();
+            return this.ExecuteSvn(commandName, new SvnArguments(this, args));
         }
 
-        private IEnumerable<string> ExecuteSvnCommand(string commandName, string arguments)
+        private ProcessResults ExecuteSvn(string commandName, SvnArguments args)
         {
-            return ExecuteSvnCommand(commandName, arguments, true);
+            return this.ExecuteSvn(commandName, args, true);
         }
 
-        private IEnumerable<string> ExecuteSvnCommand(string commandName, string arguments, bool logErrors)
+        private ProcessResults ExecuteSvn(string commandName, SvnArguments args, bool logErrors)
         {
             var results = this.ExecuteCommandLine(
-                this.SvnExePath,
-                commandName + " " + arguments,
-                null
+                new AgentProcessStartInfo 
+                { 
+                    FileName = this.SvnExePath, 
+                    Arguments = commandName + " " + args 
+                }
             );
 
-            foreach (var line in results.Output)
-                this.LogInformation(line);
-
-            foreach (var line in results.Error)
+            if (logErrors)
             {
-                if (logErrors)
+                foreach (var line in results.Error)
                     this.LogError(line);
-                else
-                    this.LogDebug(line);
-            }
+            }    
 
             if (results.ExitCode != 0)
-            {
-                var errorMessage = string.Join("", results.Error.ToArray());
-                throw new InvalidOperationException(errorMessage);
-            }
-
-            return results.Output;
+                throw new InvalidOperationException(string.Join(Environment.NewLine, results.Error));
+            else 
+                return results;
         }
 
-        private string CombineSvnPaths(string pathA, string pathB)
+        public override SourceControlContext CreateSourceControlContext(object contextData)
         {
-            if (string.IsNullOrEmpty(pathA)) pathA = string.Empty;
-            if (string.IsNullOrEmpty(pathB)) pathB = string.Empty;
-            return pathA.TrimEnd('/') + '/' + pathB.TrimStart('/');
+            return new SvnSourceControlContext(this, (string)contextData);
         }
 
-        private string CreateSvnUriTarget(string sourcePath)
+        public void DeleteWorkspace(SourceControlContext context)
         {
-            // Ensure sourcePath starts with a /
-            if (string.IsNullOrEmpty(sourcePath))
-                sourcePath = DirectorySeparator.ToString();
-            else if (!sourcePath.StartsWith(DirectorySeparator.ToString()))
-                sourcePath = DirectorySeparator.ToString() + sourcePath;
-
-            // Replace RepoName w/ Path if Necessary
-            {
-                int idx = sourcePath.IndexOf(DirectorySeparator, 1);
-                if (idx == -1)
-                    idx = sourcePath.Length;
-
-                string name = sourcePath.Substring(1, idx - 1);
-
-                var repo = this.Repositories.FirstOrDefault(r => r.RepositoryName.Equals(name, StringComparison.OrdinalIgnoreCase));
-                if (repo != null)
-                {
-                    sourcePath = CombineSvnPaths(
-                        repo.RepositoryPath,
-                        sourcePath.Substring(idx));
-                }
-            }
-
-            return CombineSvnPaths(RepositoryRoot, sourcePath);
+            this.LogDebug("Deleting workspace at: " + context.WorkspaceDiskPath);
+            this.Agent.ClearFolder(context.WorkspaceDiskPath);
         }
 
-        public SubversionRepository[] Repositories { get; set; }
-        RepositoryBase[] IMultipleRepositoryProvider.Repositories
+        public void EnsureLocalWorkspace(SourceControlContext context)
         {
-            get
+            this.LogDebug("Ensuring local workspace at: " + context.WorkspaceDiskPath);
+            if (!this.Agent.DirectoryExists(context.WorkspaceDiskPath))
             {
-                return this.Repositories;
+                this.LogDebug("Workspace does not exist, creating...");
+                this.Agent.CreateDirectory(context.WorkspaceDiskPath);
             }
-            set
+            else
             {
-                this.Repositories = Array.ConvertAll(value ?? new RepositoryBase[0], r => (SubversionRepository)r);
+                this.LogDebug("Workspace already exists.");
             }
         }
 
-        private enum BuildArgumentsOption 
+        public void ExportFiles(SourceControlContext context, string targetDirectory)
         {
-            Normal = 0, ObscurePassword = 1, DoNotQuoteArguments = 2
+            this.ExportFiles((SvnSourceControlContext)context, targetDirectory);
+        }
+
+        private void ExportFiles(SvnSourceControlContext context, string targetDirectory)
+        {
+            this.ExecuteSvn("export", context.WorkspaceDiskPath, targetDirectory, "--force");
+        }
+
+        public string GetWorkspaceDiskPath(SourceControlContext context)
+        {
+            return context.WorkspaceDiskPath;
+        }
+
+        public void UpdateLocalWorkspace(SourceControlContext context)
+        {
+            this.UpdateLocalWorkspace((SvnSourceControlContext)context);
+        }
+
+        private void UpdateLocalWorkspace(SvnSourceControlContext context)
+        {
+            this.LogDebug("Updating local workspace...");
+            string remoteUrl = null;
+            try
+            {
+                var results = this.ExecuteSvn("info", new SvnArguments(this, context.WorkspaceDiskPath, "--xml"), false);
+                var xdoc = XDocument.Parse(string.Join(Environment.NewLine, results.Output));
+                remoteUrl = (string)xdoc.Root.Element("entry").Element("url");
+                this.LogDebug("Remote URL found: " + remoteUrl);
+            }
+            catch (InvalidOperationException)
+            {
+                /* SVN will return exit code 1 if you use INFO on an uninitialized 
+                 * directory, this is the easiest way to ignore that and
+                 * just perform a CHECKOUT instead of an UPDATE. */
+                this.LogDebug("The local workspace was uninitialized.");
+            }
+
+            if (remoteUrl == null)
+            {
+                this.LogDebug("Remote repository cannot be found, performing checkout operation...");
+                this.ExecuteSvn("checkout", context.SvnTargetUrl, context.WorkspaceDiskPath);
+            }
+            else if (!context.TargetUrlMatchesRemoteUrl(remoteUrl))
+            {
+                this.LogDebug(
+                    "Remote repository URL \"{0}\" does not match the current SVN target URL \"{1}\", clearing and performing checkout operation...",
+                    remoteUrl ?? "(null)",
+                    context.SvnTargetUrl
+                );
+
+                this.DeleteWorkspace(context);
+                this.EnsureLocalWorkspace(context);
+                this.ExecuteSvn("checkout", context.SvnTargetUrl, context.WorkspaceDiskPath);
+            }
+            else
+            {
+                this.LogDebug("Updating local repository...");
+                this.ExecuteSvn("update", context.WorkspaceDiskPath);
+            }
         }
     }
 }
