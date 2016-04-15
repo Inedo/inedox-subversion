@@ -8,7 +8,7 @@ using Inedo.Web.Controls;
 namespace Inedo.BuildMasterExtensions.Subversion
 {
     internal sealed class Subversion15ProviderEditor : ProviderEditorBase
-    { 
+    {
         private ValidatingTextBox txtUsername, txtRepositoryRoot;
         private PasswordTextBox txtPassword;
         private SourceControlFileFolderPicker txtPrivateKeyPath;
@@ -37,21 +37,21 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         protected override void CreateChildControls()
         {
-            this.txtUsername = new ValidatingTextBox() { DefaultText = "anonymous" };
+            this.txtUsername = new ValidatingTextBox { DefaultText = "anonymous" };
 
             this.txtPassword = new PasswordTextBox();
 
-            this.txtPrivateKeyPath = new SourceControlFileFolderPicker()
+            this.txtPrivateKeyPath = new SourceControlFileFolderPicker
             {
                 ServerId = EditorContext.ServerId,
                 DisplayMode = SourceControlBrowser.DisplayModes.FoldersAndFiles
             };
 
-            this.chkUseSSH = new CheckBox() { Text = "Use SSH", ID = "chkUseSSH" };
+            this.chkUseSSH = new CheckBox { Text = "Use SSH", ID = "chkUseSSH" };
 
-            this.txtRepositoryRoot = new ValidatingTextBox() { Required = true };
+            this.txtRepositoryRoot = new ValidatingTextBox { Required = true };
 
-            this.txtExePath = new SourceControlFileFolderPicker()
+            this.txtExePath = new SourceControlFileFolderPicker
             {
                 DefaultText = "Use bundled client",
                 ServerId = EditorContext.ServerId,
@@ -61,14 +61,14 @@ namespace Inedo.BuildMasterExtensions.Subversion
             var ctlPrivateKey = new SlimFormField("Private key path:", this.txtPrivateKeyPath)
             {
                 HelpText = "For private key authentication, the password field is ignored and the private key itself must not have a password.",
-                ID = "ctlPrivateKey" 
+                ID = "ctlPrivateKey"
             };
 
             this.Controls.Add(
                 new SlimFormField("Repository root URL:", this.txtRepositoryRoot),
                 new SlimFormField("SSH:", this.chkUseSSH)
                 {
-                    HelpText = HelpText.FromHtml("If your server requires a custom SSH tunnel that is not already configured in the Subversion config file, check the \"Use SSH\" option. For more information, see our <a href=\"http://inedo.com/support/kb/1061/connecting-buildmaster-to-subversion-over-ssh\" target=\"_blank\">knowledge base article</a> on connecting via SSH.")
+                    HelpText = new LiteralHtml("If your server requires a custom SSH tunnel that is not already configured in the Subversion config file, check the \"Use SSH\" option. For more information, see our <a href=\"http://inedo.com/support/kb/1061/connecting-buildmaster-to-subversion-over-ssh\" target=\"_blank\">knowledge base article</a> on connecting via SSH.", false)
                 },
                 new SlimFormField("Username:", this.txtUsername),
                 new SlimFormField("Password:", this.txtPassword),
@@ -84,7 +84,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         public override ProviderBase CreateFromForm()
         {
-            return new Subversion15Provider() 
+            return new Subversion15Provider
             {
                 Username = this.txtUsername.Text,
                 Password = this.txtPassword.Text,

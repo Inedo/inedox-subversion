@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -9,22 +10,15 @@ using Inedo.BuildMaster.Extensibility.Providers;
 using Inedo.BuildMaster.Extensibility.Providers.SourceControl;
 using Inedo.BuildMaster.Files;
 using Inedo.BuildMaster.Web;
+using Inedo.Serialization;
 
 namespace Inedo.BuildMasterExtensions.Subversion
 {
-    [ProviderProperties(
-        "Subversion",
-        "Includes built-in support for SVN v1.8 and earlier.")]
+    [DisplayName("Subversion")]
+    [Description("Includes built-in support for SVN v1.8 and earlier.")]
     [CustomEditor(typeof(Subversion15ProviderEditor))]
     public sealed class Subversion15Provider : SourceControlProviderBase, ILocalWorkspaceProvider, IMultipleRepositoryProvider, IBranchingProvider, IRevisionProvider, IClientCommandProvider
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SubversionProviderBase"/> class.
-        /// </summary>
-        public Subversion15Provider()
-        {
-        }
-
         [Persistent]
         public string RepositoryRoot { get; set; }
         [Persistent]
@@ -72,15 +66,8 @@ namespace Inedo.BuildMasterExtensions.Subversion
             }
         }
 
-        bool IMultipleRepositoryProvider.DisplayEditor
-        {
-            get { return true; }
-        }
-
-        string IMultipleRepositoryProvider.LabelText
-        {
-            get { return "Relative path:"; }
-        }
+        bool IMultipleRepositoryProvider.DisplayEditor => true;
+        string IMultipleRepositoryProvider.LabelText => "Relative path:";
 
         [Persistent(CustomSerializer = typeof(SourceRepositorySerializer))]
         public SourceRepository[] Repositories { get; set; }
@@ -136,10 +123,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             return this.Agent.ReadFileBytes(context.AbsoluteDiskPath);
         }
 
-        public override bool IsAvailable()
-        {
-            return true;
-        }
+        public override bool IsAvailable() => true;
         
         public override void ValidateConnection()
         {
@@ -230,15 +214,9 @@ namespace Inedo.BuildMasterExtensions.Subversion
             }
         }
 
-        public string GetClientCommandPreview()
-        {
-            return string.Format("{{command}} {0} ", new SvnArguments(this) { ObscurePassword = true });
-        }
+        public string GetClientCommandPreview() => string.Format("{{command}} {0} ", new SvnArguments(this) { ObscurePassword = true });
 
-        public bool SupportsCommandHelp
-        {
-            get { return true; }
-        }
+        public bool SupportsCommandHelp => true;
 
         private int GetCurrentRevisionInternal(SvnSourceControlContext context)
         {
