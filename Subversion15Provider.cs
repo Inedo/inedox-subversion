@@ -4,8 +4,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Inedo.Agents;
 using Inedo.BuildMaster;
-using Inedo.BuildMaster.Extensibility.Agents;
 using Inedo.BuildMaster.Extensibility.Providers;
 using Inedo.BuildMaster.Extensibility.Providers.SourceControl;
 using Inedo.BuildMaster.Files;
@@ -34,9 +34,9 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         public override char DirectorySeparator { get { return '/'; } }
         public bool RequiresComment { get { return true; } }
-        
-        public new IFileOperationsExecuter Agent { get { return (IFileOperationsExecuter)base.Agent.GetService<IFileOperationsExecuter>(); } }
-        internal string SafePrivateKeyPath { get { return this.PrivateKeyPath.Replace(@"\", "/"); } }
+
+        public new IFileOperationsExecuter Agent => base.Agent.GetService<IFileOperationsExecuter>();
+        internal string SafePrivateKeyPath => this.PrivateKeyPath.Replace(@"\", "/");
         internal bool EffectivelyUsesRepositories 
         { 
             get { return this.Repositories != null && this.Repositories.Length > 0 && !string.IsNullOrEmpty(Repositories[0].RemoteUrl); } 
@@ -247,7 +247,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
         private ProcessResults ExecuteSvn(string commandName, SvnArguments args, bool logErrors)
         {
             var results = this.ExecuteCommandLine(
-                new AgentProcessStartInfo 
+                new RemoteProcessStartInfo 
                 { 
                     FileName = this.SvnExePath, 
                     Arguments = commandName + " " + args 
@@ -274,7 +274,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
         public void DeleteWorkspace(SourceControlContext context)
         {
             this.LogDebug("Deleting workspace at: " + context.WorkspaceDiskPath);
-            this.Agent.ClearFolder(context.WorkspaceDiskPath);
+            this.Agent.ClearDirectory(context.WorkspaceDiskPath);
         }
 
         public void EnsureLocalWorkspace(SourceControlContext context)
