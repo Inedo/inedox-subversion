@@ -10,6 +10,7 @@ using Inedo.BuildMaster.Extensibility.Providers;
 using Inedo.BuildMaster.Extensibility.Providers.SourceControl;
 using Inedo.BuildMaster.Files;
 using Inedo.BuildMaster.Web;
+using Inedo.IO;
 using Inedo.Serialization;
 
 namespace Inedo.BuildMasterExtensions.Subversion
@@ -48,7 +49,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             {
                 return Util.CoalesceStr(
                     this.ExePath,
-                    this.Agent.CombinePath(this.Agent.GetBaseWorkingDirectory(), string.Format(@"ExtTemp\{0}\Resources\svn.exe", typeof(Subversion15Provider).Assembly.GetName().Name))
+                    this.Agent.CombinePath(PathEx.GetDirectoryName(typeof(Subversion15Provider).Assembly.Location), "Resources", "svn.exe")
                 );
             }
         }
@@ -61,7 +62,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             get
             {
                 return this.Agent
-                    .CombinePath(this.Agent.GetBaseWorkingDirectory(), string.Format(@"ExtTemp\{0}\Resources\plink.exe", typeof(Subversion15Provider).Assembly.GetName().Name))
+                    .CombinePath(PathEx.GetDirectoryName(typeof(Subversion15Provider).Assembly.Location), "Resources", "plink.exe")
                     .Replace(@"\", "/");
             }
         }
