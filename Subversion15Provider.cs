@@ -43,28 +43,31 @@ namespace Inedo.BuildMasterExtensions.Subversion
             get { return this.Repositories != null && this.Repositories.Length > 0 && !string.IsNullOrEmpty(Repositories[0].RemoteUrl); } 
         }
 
-        private string SvnExePath
+        private string GetSvnExePath()
         {
-            get
-            {
-                return Util.CoalesceStr(
-                    this.ExePath,
-                    this.Agent.CombinePath(PathEx.GetDirectoryName(typeof(Subversion15Provider).Assembly.Location), "Resources", "svn.exe")
-                );
-            }
+            if (!string.IsNullOrEmpty(this.ExePath))
+                return this.ExePath;
+
+            var executer = base.Agent.GetService<IRemoteMethodExecuter>();
+            string assemblyDir = executer.InvokeFunc(GetAgentProviderAssemblyDirectory);
+            return this.Agent.CombinePath(assemblyDir, "Resources", "svn.exe");
         }
+
         /// <summary>
         /// Gets the path to the embedded plink.exe in Linux format (/path/to/_WEBTEMP/Subversion/plink.exe) 
         /// because SVN will not accept backslashes in its SSH configuration
         /// </summary>
-        internal string PlinkExePath
+        internal string GetPlinkExePath()
         {
-            get
-            {
-                return this.Agent
-                    .CombinePath(PathEx.GetDirectoryName(typeof(Subversion15Provider).Assembly.Location), "Resources", "plink.exe")
-                    .Replace(@"\", "/");
-            }
+            var executer = base.Agent.GetService<IRemoteMethodExecuter>();
+            string assemblyDir = executer.InvokeFunc(GetAgentProviderAssemblyDirectory);
+            string path = this.Agent.CombinePath(assemblyDir, "Resources", "plink.exe");
+            return path.Replace(@"\", "/");
+        }
+
+        private static string GetAgentProviderAssemblyDirectory()
+        {
+            return PathEx.GetDirectoryName(typeof(Subversion15Provider).Assembly.Location);
         }
 
         bool IMultipleRepositoryProvider.DisplayEditor => true;
@@ -250,7 +253,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             var results = this.ExecuteCommandLine(
                 new RemoteProcessStartInfo 
                 { 
-                    FileName = this.SvnExePath, 
+                    FileName = this.GetSvnExePath(), 
                     Arguments = commandName + " " + args 
                 }
             );
