@@ -106,17 +106,17 @@
     <Compile Include="Operations\SvnCheckoutOperation.cs" />
     <Compile Include="Operations\SvnOperation.cs" />
     <Compile Include="RemoteMethods.cs" />
-    <Compile Include="Subversion15ProviderEditor.cs">
+    <Compile Include="Legacy\Subversion15ProviderEditor.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Subversion15Provider.cs" />
-    <Compile Include="SubversionRepository.cs" />
-    <Compile Include="SubversionRepositoryEditor.cs" />
+    <Compile Include="Legacy\Subversion15Provider.cs" />
+    <Compile Include="Legacy\SubversionRepository.cs" />
+    <Compile Include="Legacy\SubversionRepositoryEditor.cs" />
     <Compile Include="SuggestionProviders\SvnPathBrowser.cs" />
     <Compile Include="SvnArgumentBuilder.cs" />
-    <Compile Include="SvnArguments.cs" />
-    <Compile Include="SvnSourceControlContext.cs" />
+    <Compile Include="Legacy\SvnArguments.cs" />
+    <Compile Include="Legacy\SvnSourceControlContext.cs" />
     <Compile Include="VariableFunctions\SvnDefaultServerNameVariableFunction.cs" />
     <Compile Include="VariableFunctions\SvnExePathVariableFunction.cs" />
   </ItemGroup>
@@ -148,7 +148,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="SvnCommands.txt" />
+    <EmbeddedResource Include="Legacy\SvnCommands.txt" />
     <None Include="Licenses\Plink.txt" />
     <None Include="Licenses\Subversion.txt" />
     <Content Include="Resources\plink.exe">
