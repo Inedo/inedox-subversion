@@ -34,13 +34,13 @@ namespace Inedo.BuildMasterExtensions.Subversion
                 this.PathSpecifiedRepositoryName = pathSpecifiedRepositoryName;
                 this.Repository = repo;
                 this.RepositoryRelativePath = CombineSvnPaths(repo.RemoteUrl, path.Substring(index));
-                this.WorkspaceDiskPath = repo.GetDiskPath(provider.Agent);
+                this.WorkspaceDiskPath = repo.GetDiskPath(provider.FileOps);
             }
             else
             {
                 var tmpRepo = new SourceRepository() { RemoteUrl = provider.RepositoryRoot };
                 this.RepositoryRelativePath = path;
-                this.WorkspaceDiskPath = tmpRepo.GetDiskPath(provider.Agent);
+                this.WorkspaceDiskPath = tmpRepo.GetDiskPath(provider.FileOps);
             }
 
             this.SvnTargetUrl = CombineSvnPaths(provider.RepositoryRoot, this.RepositoryRelativePath);

@@ -35,39 +35,14 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         public override char DirectorySeparator { get { return '/'; } }
         public bool RequiresComment { get { return true; } }
+        
+        public IFileOperationsExecuter FileOps => this.Agent.GetService<IFileOperationsExecuter>();
 
-        public new IFileOperationsExecuter Agent => base.Agent.GetService<IFileOperationsExecuter>();
-        internal string SafePrivateKeyPath => this.PrivateKeyPath.Replace(@"\", "/");
+        internal string SafePrivateKeyPath => this.PrivateKeyPath?.Replace(@"\", "/");
+
         internal bool EffectivelyUsesRepositories 
         { 
             get { return this.Repositories != null && this.Repositories.Length > 0 && !string.IsNullOrEmpty(Repositories[0].RemoteUrl); } 
-        }
-
-        private string GetSvnExePath()
-        {
-            if (!string.IsNullOrEmpty(this.ExePath))
-                return this.ExePath;
-
-            var executer = base.Agent.GetService<IRemoteMethodExecuter>();
-            string assemblyDir = executer.InvokeFunc(GetAgentProviderAssemblyDirectory);
-            return this.Agent.CombinePath(assemblyDir, "Resources", "svn.exe");
-        }
-
-        /// <summary>
-        /// Gets the path to the embedded plink.exe in Linux format (/path/to/_WEBTEMP/Subversion/plink.exe) 
-        /// because SVN will not accept backslashes in its SSH configuration
-        /// </summary>
-        internal string GetPlinkExePath()
-        {
-            var executer = base.Agent.GetService<IRemoteMethodExecuter>();
-            string assemblyDir = executer.InvokeFunc(GetAgentProviderAssemblyDirectory);
-            string path = this.Agent.CombinePath(assemblyDir, "Resources", "plink.exe");
-            return path.Replace(@"\", "/");
-        }
-
-        private static string GetAgentProviderAssemblyDirectory()
-        {
-            return PathEx.GetDirectoryName(typeof(Subversion15Provider).Assembly.Location);
         }
 
         bool IMultipleRepositoryProvider.DisplayEditor => true;
@@ -124,7 +99,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             var context = (SvnSourceControlContext)this.CreateSourceControlContext(filePath);
             this.EnsureLocalWorkspace(context);
             this.UpdateLocalWorkspace(context);
-            return this.Agent.ReadFileBytes(context.AbsoluteDiskPath);
+            return this.FileOps.ReadFileBytes(context.AbsoluteDiskPath);
         }
 
         public override bool IsAvailable() => true;
@@ -250,10 +225,14 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
         private ProcessResults ExecuteSvn(string commandName, SvnArguments args, bool logErrors)
         {
+            string exePath = !string.IsNullOrEmpty(this.ExePath) 
+                ? this.ExePath 
+                : RemoteMethods.GetEmbeddedSvnExePath(this.Agent);
+
             var results = this.ExecuteCommandLine(
                 new RemoteProcessStartInfo 
                 { 
-                    FileName = this.GetSvnExePath(), 
+                    FileName = exePath,
                     Arguments = commandName + " " + args 
                 }
             );
@@ -278,16 +257,16 @@ namespace Inedo.BuildMasterExtensions.Subversion
         public void DeleteWorkspace(SourceControlContext context)
         {
             this.LogDebug("Deleting workspace at: " + context.WorkspaceDiskPath);
-            this.Agent.ClearDirectory(context.WorkspaceDiskPath);
+            this.FileOps.ClearDirectory(context.WorkspaceDiskPath);
         }
 
         public void EnsureLocalWorkspace(SourceControlContext context)
         {
             this.LogDebug("Ensuring local workspace at: " + context.WorkspaceDiskPath);
-            if (!this.Agent.DirectoryExists(context.WorkspaceDiskPath))
+            if (!this.FileOps.DirectoryExists(context.WorkspaceDiskPath))
             {
                 this.LogDebug("Workspace does not exist, creating...");
-                this.Agent.CreateDirectory(context.WorkspaceDiskPath);
+                this.FileOps.CreateDirectory(context.WorkspaceDiskPath);
             }
             else
             {

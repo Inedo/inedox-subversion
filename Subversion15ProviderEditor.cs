@@ -11,9 +11,9 @@ namespace Inedo.BuildMasterExtensions.Subversion
     {
         private ValidatingTextBox txtUsername, txtRepositoryRoot;
         private PasswordTextBox txtPassword;
-        private SourceControlFileFolderPicker txtPrivateKeyPath;
+        private FileBrowserTextBox txtPrivateKeyPath;
         private CheckBox chkUseSSH;
-        private SourceControlFileFolderPicker txtExePath;
+        private FileBrowserTextBox txtExePath;
 
         public Subversion15ProviderEditor()
         {
@@ -41,21 +41,21 @@ namespace Inedo.BuildMasterExtensions.Subversion
 
             this.txtPassword = new PasswordTextBox();
 
-            this.txtPrivateKeyPath = new SourceControlFileFolderPicker
+            this.txtPrivateKeyPath = new FileBrowserTextBox
             {
                 ServerId = EditorContext.ServerId,
-                DisplayMode = SourceControlBrowser.DisplayModes.FoldersAndFiles
+                IncludeFiles = true
             };
 
             this.chkUseSSH = new CheckBox { Text = "Use SSH", ID = "chkUseSSH" };
 
             this.txtRepositoryRoot = new ValidatingTextBox { Required = true };
 
-            this.txtExePath = new SourceControlFileFolderPicker
+            this.txtExePath = new FileBrowserTextBox
             {
                 DefaultText = "Use bundled client",
                 ServerId = EditorContext.ServerId,
-                DisplayMode = SourceControlBrowser.DisplayModes.FoldersAndFiles
+                IncludeFiles = true
             };
 
             var ctlPrivateKey = new SlimFormField("Private key path:", this.txtPrivateKeyPath)

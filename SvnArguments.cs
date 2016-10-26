@@ -49,7 +49,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             if (provider.UseSSH)
             {
                 // --config-option=config:tunnels:ssh="plink.exe -batch -i /path/to/private-key.ppk"
-                argBuffer.AppendFormat(@"--config-option=config:tunnels:ssh=""{0} -batch", provider.GetPlinkExePath());
+                argBuffer.AppendFormat(@"--config-option=config:tunnels:ssh=""{0} -batch", RemoteMethods.GetEmbeddedPlinkExePath(provider.Agent));
                 if (!string.IsNullOrEmpty(provider.PrivateKeyPath))
                     argBuffer.AppendFormat(" -i {0}", provider.SafePrivateKeyPath);
                 argBuffer.Append("\"");
