@@ -1,12 +1,12 @@
 ﻿using Inedo.Agents;
-using Inedo.BuildMaster.Extensibility.Agents;
+using Inedo.Extensibility.Agents;
 using Inedo.IO;
 
 namespace Inedo.BuildMasterExtensions.Subversion
 {
     internal static class RemoteMethods
     {
-        public static string GetEmbeddedSvnExePath(BuildMasterAgent agent)
+        public static string GetEmbeddedSvnExePath(Agent agent)
         {
             var executer = agent.GetService<IRemoteMethodExecuter>();
             string assemblyDir = executer.InvokeFunc(GetAgentProviderAssemblyDirectory);
@@ -14,7 +14,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             return fileOps.CombinePath(assemblyDir, "Resources", "svn.exe");
         }
 
-        public static string GetEmbeddedPlinkExePath(BuildMasterAgent agent)
+        public static string GetEmbeddedPlinkExePath(Agent agent)
         {
             // returns the path to the embedded plink.exe in Linux format (/path/to/_WEBTEMP/Subversion/plink.exe) 
             // because SVN will not accept backslashes in its SSH configuration

@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Security;
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Credentials;
-using Inedo.BuildMaster.Extensibility.Operations;
 using Inedo.BuildMasterExtensions.Subversion.Credentials;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Credentials;
+using Inedo.Extensibility.Operations;
 
 namespace Inedo.BuildMasterExtensions.Subversion.Operations
 {

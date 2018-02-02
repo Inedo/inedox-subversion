@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.VariableFunctions;
 using Inedo.Documentation;
+using Inedo.Extensibility;
+using Inedo.Extensibility.VariableFunctions;
 
 namespace Inedo.BuildMasterExtensions.Subversion.VariableFunctions
 {
@@ -11,7 +11,7 @@ namespace Inedo.BuildMasterExtensions.Subversion.VariableFunctions
     [ExtensionConfigurationVariable(Required = false)]
     public sealed class SvnExePathVariableFunction : ScalarVariableFunction
     {
-        protected override object EvaluateScalar(IGenericBuildMasterContext context)
+        protected override object EvaluateScalar(IVariableFunctionContext context)
         {
             return string.Empty;
         }

@@ -5,10 +5,10 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Agents;
-using Inedo.BuildMaster.Extensibility.Agents;
-using Inedo.BuildMaster.Extensibility.Operations;
-using Inedo.BuildMaster.Web.Controls;
 using Inedo.Diagnostics;
+using Inedo.Extensibility.Agents;
+using Inedo.Extensibility.Operations;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.Subversion
 {
@@ -16,23 +16,23 @@ namespace Inedo.BuildMasterExtensions.Subversion
     {
         private string svnExePath;
         private string userName;
-        private string password;
+        private SecureString password;
         private CancellationToken cancellationToken;
-        private BuildMasterAgent agent;
-        private ILogger log;
+        private Agent agent;
+        private ILogSink log;
 
-        public SvnClient(IOperationExecutionContext context, string userName, SecureString password, string svnExePath, ILogger log)
-            : this(userName, password.ToUnsecureString(), context.Agent, svnExePath, log, context.CancellationToken)
+        public SvnClient(IOperationExecutionContext context, string userName, SecureString password, string svnExePath, ILogSink log)
+            : this(userName, password, context.Agent, svnExePath, log, context.CancellationToken)
         {
         }
 
-        public SvnClient(string userName, string password, BuildMasterAgent agent, string svnExePath, ILogger log, CancellationToken? cancellationToken = null)
+        public SvnClient(string userName, SecureString password, Agent agent, string svnExePath, ILogSink log, CancellationToken? cancellationToken = null)
         {
             this.agent = agent;
             this.userName = userName;
             this.password = password;
             this.svnExePath = AH.CoalesceString(svnExePath, RemoteMethods.GetEmbeddedSvnExePath(agent));
-            this.log = log ?? Logger.Null;
+            this.log = log ?? (ILogSink)Logger.Null;
             this.cancellationToken = cancellationToken ?? CancellationToken.None;
         }
 
@@ -110,7 +110,7 @@ namespace Inedo.BuildMasterExtensions.Subversion
             if (this.password != null)
             {
                 args.Append("--password");
-                args.AppendSensitive(this.password);
+                args.AppendSensitive(AH.Unprotect(this.password));
             }
 
             var startInfo = new RemoteProcessStartInfo

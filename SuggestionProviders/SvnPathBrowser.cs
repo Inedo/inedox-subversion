@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Inedo.BuildMaster.Data;
-using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Agents;
-using Inedo.BuildMaster.Extensibility.Credentials;
-using Inedo.BuildMaster.Web.Controls;
-using Inedo.BuildMaster.Web.Controls.Plans.ArgumentEditors;
 using Inedo.BuildMasterExtensions.Subversion.Credentials;
 using Inedo.Diagnostics;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Agents;
+using Inedo.Extensibility.Credentials;
+using Inedo.Web;
+using Inedo.Web.Plans.ArgumentEditors;
 
 namespace Inedo.BuildMasterExtensions.Subversion.SuggestionProviders
 {
@@ -21,7 +22,7 @@ namespace Inedo.BuildMasterExtensions.Subversion.SuggestionProviders
             
             using (var agent = info.CreateAgent())
             {
-                var client = new SvnClient(info.UserName, info.Password, agent, info.GetSvnExePath(agent), Logger.Null);
+                var client = new SvnClient(info.UserName, AH.CreateSecureString(info.Password), agent, info.GetSvnExePath(agent), (ILogSink)Logger.Null);
                 
                 if (string.IsNullOrEmpty(info.RepositoryUrl))
                     throw new InvalidOperationException("The SVN repository URL could not be determined.");
@@ -45,10 +46,10 @@ namespace Inedo.BuildMasterExtensions.Subversion.SuggestionProviders
             public string SourcePath => config[nameof(this.SourcePath)];
             public string RepositoryUrl => AH.CoalesceString(config[nameof(this.RepositoryUrl)], this.getCredentials.Value?.RepositoryUrl);
             public string UserName => AH.CoalesceString(config[nameof(this.UserName)], this.getCredentials.Value?.UserName);
-            public string Password => AH.CoalesceString(config[nameof(this.Password)], this.getCredentials.Value?.Password.ToUnsecureString());
-            public int? ApplicationId => ((IBrowsablePathEditorContext)config).ApplicationId;
+            public string Password => AH.CoalesceString(config[nameof(this.Password)], AH.Unprotect(this.getCredentials.Value?.Password));
+            public int? ApplicationId => ((IBrowsablePathEditorContext)config).ProjectId;
 
-            public string GetSvnExePath(BuildMasterAgent agent)
+            public string GetSvnExePath(Agent agent)
             {
                 string path = this.config["SvnExePath"];
                 if (!string.IsNullOrEmpty(path))
@@ -57,7 +58,7 @@ namespace Inedo.BuildMasterExtensions.Subversion.SuggestionProviders
                 return RemoteMethods.GetEmbeddedSvnExePath(agent);
             }
 
-            public BuildMasterAgent CreateAgent()
+            public Agent CreateAgent()
             {
                 var vars = DB.Variables_GetVariablesAccessibleFromScope(
                     Variable_Name: "SvnDefaultServerName",
