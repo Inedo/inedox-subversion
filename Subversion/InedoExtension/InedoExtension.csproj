@@ -69,6 +69,7 @@
     <Compile Include="Credentials\SubversionCredentials.cs" />
     <Compile Include="Operations\SvnCheckoutOperation.cs" />
     <Compile Include="Operations\SvnClient.cs" />
+    <Compile Include="Operations\SvnDeleteOperation.cs" />
     <Compile Include="Operations\SvnCopyOperation.cs" />
     <Compile Include="Operations\SvnExportOperation.cs" />
     <Compile Include="Operations\SvnOperation.cs" />

@@ -91,6 +91,18 @@ namespace Inedo.Extensions.Subversion
             return await this.ExecuteCommandLineAsync(args).ConfigureAwait(false);
         }
 
+        public async Task<SvnClientExecutionResult> DeleteAsync(SvnPath path, string message, string additionalArguments)
+        {
+            var args = new SvnArgumentBuilder();
+            args.Append("delete");
+            args.AppendQuoted(path.AbsolutePath);
+            args.Append("-m");
+            args.AppendQuoted(message);
+            args.Append(additionalArguments);
+
+            return await this.ExecuteCommandLineAsync(args).ConfigureAwait(false);
+        }
+
         public async Task<IEnumerable<SvnPath>> EnumerateChildSourcePathsAsync(SvnPath path)
         {
             var args = new SvnArgumentBuilder();
