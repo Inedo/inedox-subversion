@@ -30,7 +30,7 @@ namespace Inedo.Extensions.Subversion.Operations
 
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
-            this.LogInformation("Executing SVN copy...");
+            this.LogInformation("Executing SVN delete...");
 
             var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
             var path = new SvnPath(this.RespositoryUrl, this.Path);
