@@ -1,6 +1,6 @@
 # inedox-subversion
 
-[![Build status](https://ci.appveyor.com/api/projects/status/jqjxyj3q1xwiswbk/branch/master?svg=true)](https://ci.appveyor.com/project/Inedo/inedox-subversion/branch/master)
+[![Build status](https://buildmaster.inedo.com/api/ci-badges/image?API_Key=badges&$ApplicationId=23)](https://buildmaster.inedo.com/api/ci-badges/link?API_Key=badges&$ApplicationId=23)
 
 Source Control integration for Subversion 1.5 and later.
 
