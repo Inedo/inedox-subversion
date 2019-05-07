@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Inedo.Agents;
 using Inedo.Diagnostics;
 using Inedo.Extensibility.Agents;
@@ -119,6 +120,35 @@ namespace Inedo.Extensions.Subversion
             return lines.Select(o => new SvnPath(path, o));
         }
 
+        public async Task<IEnumerable<SvnBranch>> EnumerateBranchesAsync(SvnPath path)
+        {
+            var branchesPath = new SvnPath(path, "branches/");
+
+            var args = new SvnArgumentBuilder();
+            args.Append("ls");
+            args.Append("--xml");
+            args.AppendQuoted(path.AbsolutePath);
+            args.AppendQuoted(branchesPath.AbsolutePath);
+            var result = await this.ExecuteCommandLineAsync(args).ConfigureAwait(false);
+            if (result.ErrorLines.Count > 0)
+                throw new InvalidOperationException(string.Join(Environment.NewLine, result.ErrorLines));
+
+            var lists = XElement.Parse(string.Join(Environment.NewLine, result.OutputLines));
+            if (lists.Elements("list").Count() != 2)
+                throw new InvalidOperationException($"expected 2 list elements but there are {lists.Elements("list").Count()}");
+
+            var trunkEntry = lists.Elements("list").First().Elements("entry").FirstOrDefault(e => e.Attribute("kind").Value == "dir" && e.Element("name").Value == "trunk");
+            var branchEntries = lists.Elements("list").Last().Elements("entry").Where(e => e.Attribute("kind").Value == "dir");
+
+            var branches = new List<SvnBranch>();
+            if (trunkEntry != null)
+                branches.Add(new SvnBranch(path, trunkEntry));
+
+            branches.AddRange(branchEntries.Select(e => new SvnBranch(branchesPath, e)));
+
+            return branches;
+        }
+
         private async Task<SvnClientExecutionResult> ExecuteCommandLineAsync(SvnArgumentBuilder args)
         {
             args.Append("--non-interactive");
@@ -162,6 +192,7 @@ namespace Inedo.Extensions.Subversion
         }
     }
 
+    [Serializable]
     internal sealed class SvnPath : IPathInfo
     {
         public SvnPath(string repositoryUrl, string relativePath)
@@ -191,6 +222,25 @@ namespace Inedo.Extensions.Subversion
         string IPathInfo.FullPath => this.RepositoryRelativePath;
 
         public override string ToString() => this.AbsolutePath;
+    }
+
+    [Serializable]
+    internal sealed class SvnBranch
+    {
+        public SvnBranch(SvnPath parent, XElement entry)
+        {
+            var name = entry.Element("name").Value;
+            this.Path = new SvnPath(parent, name + "/");
+            var commit = entry.Element("commit");
+            this.Revision = commit.Attribute("revision").Value;
+            this.Author = commit.Element("author").Value;
+            this.Date = DateTimeOffset.Parse(commit.Element("date").Value);
+        }
+
+        public SvnPath Path { get; }
+        public string Revision { get; }
+        public string Author { get; }
+        public DateTimeOffset Date { get; }
     }
 
     public sealed class SvnClientExecutionResult
