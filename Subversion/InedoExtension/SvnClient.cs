@@ -120,7 +120,10 @@ namespace Inedo.Extensions.Subversion
             return lines.Select(o => new SvnPath(path, o));
         }
 
-        public async Task<IEnumerable<SvnBranch>> EnumerateBranchesAsync(SvnPath path)
+        public Task<IEnumerable<SvnBranch>> EnumerateBranchesAsync(SvnPath path) => this.EnumerateBranchesOrTagsAsync(path, "branches/", true);
+        public Task<IEnumerable<SvnBranch>> EnumerateTagsAsync(SvnPath path) => this.EnumerateBranchesOrTagsAsync(path, "tags/", false);
+
+        public async Task<IEnumerable<SvnBranch>> EnumerateBranchesOrTagsAsync(SvnPath path, string prefix, bool includeTrunk)
         {
             var branchesPath = new SvnPath(path, "branches/");
 
@@ -137,13 +140,15 @@ namespace Inedo.Extensions.Subversion
             if (lists.Elements("list").Count() != 2)
                 throw new InvalidOperationException($"expected 2 list elements but there are {lists.Elements("list").Count()}");
 
-            var trunkEntry = lists.Elements("list").First().Elements("entry").FirstOrDefault(e => e.Attribute("kind").Value == "dir" && e.Element("name").Value == "trunk");
-            var branchEntries = lists.Elements("list").Last().Elements("entry").Where(e => e.Attribute("kind").Value == "dir");
-
             var branches = new List<SvnBranch>();
-            if (trunkEntry != null)
-                branches.Add(new SvnBranch(path, trunkEntry));
+            if (includeTrunk)
+            {
+                var trunkEntry = lists.Elements("list").First().Elements("entry").FirstOrDefault(e => e.Attribute("kind").Value == "dir" && e.Element("name").Value == "trunk");
+                if (trunkEntry != null)
+                    branches.Add(new SvnBranch(path, trunkEntry));
+            }
 
+            var branchEntries = lists.Elements("list").Last().Elements("entry").Where(e => e.Attribute("kind").Value == "dir");
             branches.AddRange(branchEntries.Select(e => new SvnBranch(branchesPath, e)));
 
             return branches;

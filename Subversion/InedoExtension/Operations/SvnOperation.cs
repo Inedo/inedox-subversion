@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Security;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
@@ -11,7 +12,17 @@ namespace Inedo.Extensions.Subversion.Operations
 {
     public abstract class SvnOperation : ExecuteOperation, IHasCredentials<SubversionCredentials>
     {
-        public abstract string CredentialName { get; set;  }
+        public abstract string CredentialName { get; set; }
+
+        [ScriptAlias("UseCanonicalLayout")]
+        [DisplayName("Use canonical layout")]
+        public bool UseCanonicalLayout { get; set; }
+        [ScriptAlias("Tag")]
+        [DisplayName("Tag")]
+        public string Tag { get; set; }
+        [ScriptAlias("Branch")]
+        [DisplayName("Branch")]
+        public string Branch { get; set; }
 
         [Category("Advanced")]
         [ScriptAlias("AdditionalArguments")]
@@ -41,6 +52,29 @@ namespace Inedo.Extensions.Subversion.Operations
         [DisplayName("svn.exe path")]
         [DefaultValue("$SvnExePath")]
         public string SvnExePath { get; set; }
+
+        protected string BaseUrl => this.RespositoryUrl + this.PathPrefix;
+        protected string PathPrefix
+        {
+            get
+            {
+                if (!this.UseCanonicalLayout)
+                {
+                    if (!string.IsNullOrEmpty(this.Branch) || !string.IsNullOrEmpty(this.Tag))
+                        throw new InvalidOperationException("Branch and Tag may only be set if UseCanonicalLayout is enabled.");
+
+                    return string.Empty;
+                }
+
+                if (!string.IsNullOrEmpty(this.Tag))
+                    return "/tags/" + this.Tag;
+
+                if (!string.IsNullOrEmpty(this.Branch))
+                    return "/branches/" + this.Tag;
+
+                return "/trunk";
+            }
+        }
 
         protected void LogClientResult(SvnClientExecutionResult result)
         {

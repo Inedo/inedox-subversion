@@ -53,8 +53,8 @@ Svn-Copy(
             this.LogInformation("Executing SVN copy...");
 
             var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
-            var sourcePath = new SvnPath(this.RespositoryUrl, this.SourcePath);
-            var destinationPath = new SvnPath(this.RespositoryUrl, this.DestinationPath);
+            var sourcePath = new SvnPath(this.BaseUrl, this.SourcePath);
+            var destinationPath = new SvnPath(this.BaseUrl, this.DestinationPath);
             var result = await client.CopyAsync(sourcePath, destinationPath, this.Message, this.AdditionalArguments).ConfigureAwait(false);
 
             this.LogClientResult(result);

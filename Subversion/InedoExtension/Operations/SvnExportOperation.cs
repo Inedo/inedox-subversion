@@ -43,7 +43,7 @@ Svn-Export(
             this.LogInformation("Executing SVN export...");
 
             var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
-            var sourcePath = new SvnPath(this.RespositoryUrl, this.SourcePath);
+            var sourcePath = new SvnPath(this.BaseUrl, this.SourcePath);
             var result = await client.ExportAsync(sourcePath, context.ResolvePath(this.DestinationPath), this.AdditionalArguments).ConfigureAwait(false);
 
             this.LogClientResult(result);

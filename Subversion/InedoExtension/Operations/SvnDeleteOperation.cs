@@ -33,7 +33,7 @@ namespace Inedo.Extensions.Subversion.Operations
             this.LogInformation("Executing SVN delete...");
 
             var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
-            var path = new SvnPath(this.RespositoryUrl, this.Path);
+            var path = new SvnPath(this.BaseUrl, this.Path);
             var result = await client.DeleteAsync(path, this.Message, this.AdditionalArguments).ConfigureAwait(false);
 
             this.LogClientResult(result);

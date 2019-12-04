@@ -41,7 +41,20 @@ namespace Inedo.Extensions.Subversion.SuggestionProviders
             }
 
             public string SourcePath => config[nameof(this.SourcePath)];
-            public string RepositoryUrl => AH.CoalesceString(config[nameof(this.RepositoryUrl)], this.getCredentials.Value?.RepositoryUrl);
+            public string RepositoryUrl
+            {
+                get
+                {
+                    var repositoryUrl = AH.CoalesceString(config[nameof(this.RepositoryUrl)], this.getCredentials.Value?.RepositoryUrl);
+                    if (!string.Equals(config[nameof(Operations.SvnOperation.UseCanonicalLayout)], bool.TrueString, StringComparison.OrdinalIgnoreCase))
+                        return repositoryUrl;
+
+                    string tag = config[nameof(Operations.SvnOperation.Tag)];
+                    string branch = config[nameof(Operations.SvnOperation.Branch)];
+
+                    return repositoryUrl + "/" + AH.CoalesceString(AH.ConcatNE("tags/", tag), AH.ConcatNE("branches/", branch), "trunk");
+                }
+            }
             public string UserName => AH.CoalesceString(config[nameof(this.UserName)], this.getCredentials.Value?.UserName);
             public string Password => AH.CoalesceString(config[nameof(this.Password)], AH.Unprotect(this.getCredentials.Value?.Password));
             public int? ApplicationId => ((IBrowsablePathEditorContext)config.EditorContext).ProjectId;
