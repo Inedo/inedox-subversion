@@ -120,6 +120,20 @@ namespace Inedo.Extensions.Subversion
             return lines.Select(o => new SvnPath(path, o));
         }
 
+        public async Task<string> GetRevisionNumberAsync(SvnPath path)
+        {
+            var args = new SvnArgumentBuilder();
+            args.Append("info");
+            args.Append("--xml");
+            args.AppendQuoted(path.AbsolutePath);
+            var result = await this.ExecuteCommandLineAsync(args).ConfigureAwait(false);
+            if (result.ErrorLines.Count > 0)
+                throw new InvalidOperationException(string.Join(Environment.NewLine, result.ErrorLines));
+
+            var info = XElement.Parse(string.Join(Environment.NewLine, result.OutputLines));
+            return info.Element("entry").Attribute("revision").Value;
+        }
+
         public async Task<IEnumerable<SvnBranch>> EnumerateBranchesAsync(SvnPath path)
         {
             var branchesPath = new SvnPath(path, "branches/");
