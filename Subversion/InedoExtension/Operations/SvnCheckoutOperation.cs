@@ -37,6 +37,11 @@ Svn-Checkout(
         [FilePathEditor]
         [PlaceholderText("$WorkingDirectory")]
         public string DestinationPath { get; set; }
+        [Output]
+        [ScriptAlias("RevisionNumber")]
+        [DisplayName("Revision number")]
+        [PlaceholderText("eg. $RevisionNumber")]
+        public string RevisionNumber { get; set; }
 
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
@@ -44,9 +49,12 @@ Svn-Checkout(
 
             var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
             var sourcePath = new SvnPath(this.RespositoryUrl, this.SourcePath);
-            var result = await client.CheckoutAsync(sourcePath, context.ResolvePath(this.DestinationPath), this.AdditionalArguments).ConfigureAwait(false);
+            var destinationPath = context.ResolvePath(this.DestinationPath);
+            var result = await client.CheckoutAsync(sourcePath, destinationPath, this.AdditionalArguments).ConfigureAwait(false);
 
             this.LogClientResult(result);
+
+            this.RevisionNumber = await client.GetRevisionNumberAsync(new SvnPath(destinationPath, null)).ConfigureAwait(false);
 
             this.LogInformation("SVN checkout executed.");
         }
