@@ -15,9 +15,6 @@ namespace Inedo.Extensions.Subversion.Operations
     [ScriptAlias("Svn-Delete")]
     public sealed class SvnDeleteOperation : SvnOperation
     {
-        [ScriptAlias("Credentials")]
-        [DisplayName("Credentials")]
-        public override string CredentialName { get; set; }
         [Required]
         [ScriptAlias("Path")]
         [DisplayName("File path")]
@@ -31,9 +28,9 @@ namespace Inedo.Extensions.Subversion.Operations
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
             this.LogInformation("Executing SVN delete...");
-
-            var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
-            var path = new SvnPath(this.RespositoryUrl, this.Path);
+            var (c, r) = this.GetCredentialsAndResource(context);
+            var client = new SvnClient(context, c, this.SvnExePath, this);
+            var path = new SvnPath(r?.RepositoryUrl, this.Path);
             var result = await client.DeleteAsync(path, this.Message, this.AdditionalArguments).ConfigureAwait(false);
 
             this.LogClientResult(result);

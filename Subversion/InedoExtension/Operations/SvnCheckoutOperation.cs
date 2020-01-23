@@ -24,9 +24,6 @@ Svn-Checkout(
 ")]
     public sealed class SvnCheckoutOperation : SvnOperation
     {
-        [ScriptAlias("Credentials")]
-        [DisplayName("Credentials")]
-        public override string CredentialName { get; set; }
         [ScriptAlias("SourcePath")]
         [DisplayName("Source path")]
         [PlaceholderText("Repository root")]
@@ -47,8 +44,10 @@ Svn-Checkout(
         {
             this.LogInformation("Executing SVN checkout...");
 
-            var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
-            var sourcePath = new SvnPath(this.RespositoryUrl, this.SourcePath);
+            var (c, r) = this.GetCredentialsAndResource(context);
+
+            var client = new SvnClient(context, c, this.SvnExePath, this);
+            var sourcePath = new SvnPath(r?.RepositoryUrl, this.SourcePath);
             var destinationPath = context.ResolvePath(this.DestinationPath);
             var result = await client.CheckoutAsync(sourcePath, destinationPath, this.AdditionalArguments).ConfigureAwait(false);
 

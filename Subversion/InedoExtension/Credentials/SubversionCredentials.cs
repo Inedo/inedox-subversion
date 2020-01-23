@@ -3,6 +3,7 @@ using System.Security;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Credentials;
+using Inedo.Extensibility.SecureResources;
 using Inedo.Serialization;
 using Inedo.Web;
 
@@ -33,5 +34,11 @@ namespace Inedo.Extensions.Subversion.Credentials
         {
             return new RichDescription(this.UserName, " @ ", this.RepositoryUrl);
         }
+
+        public override SecureCredentials ToSecureCredentials() =>
+            new Extensions.Credentials.UsernamePasswordCredentials { UserName = this.UserName, Password = this.Password };
+
+        public override SecureResource ToSecureResource() =>
+            new SubversionSecureResource { RepositoryUrl = this.RepositoryUrl };
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
@@ -20,7 +21,8 @@ namespace Inedo.Extensions.Subversion.SuggestionProviders
             var info = new PathBrowserInfo(config);
 
             var execOps = new LocalProcessExecuter();
-            var client = new SvnClient(info.UserName, AH.CreateSecureString(info.Password), execOps, info.GetSvnExePath(), (ILogSink)Logger.Null);
+            var (c,r) = info.GetCredentialsAndResource(config as ICredentialResolutionContext);
+            var client = new SvnClient(c, execOps, info.GetSvnExePath(), (ILogSink)Logger.Null);
                 
             if (string.IsNullOrEmpty(info.RepositoryUrl))
                 throw new InvalidOperationException("The SVN repository URL could not be determined.");
@@ -29,7 +31,7 @@ namespace Inedo.Extensions.Subversion.SuggestionProviders
             return paths.Where(p => p.IsDirectory);
         }
 
-        private sealed class PathBrowserInfo
+        private sealed class PathBrowserInfo : ISvnConfiguration
         {
             private IComponentConfiguration config;
             private Lazy<SubversionCredentials> getCredentials;
@@ -45,6 +47,9 @@ namespace Inedo.Extensions.Subversion.SuggestionProviders
             public string UserName => AH.CoalesceString(config[nameof(this.UserName)], this.getCredentials.Value?.UserName);
             public string Password => AH.CoalesceString(config[nameof(this.Password)], AH.Unprotect(this.getCredentials.Value?.Password));
             public int? ApplicationId => ((IBrowsablePathEditorContext)config.EditorContext).ProjectId;
+
+            public string ResourceName => AH.CoalesceString(this.config["CredentialName"], this.config["From"]);
+            SecureString ISvnConfiguration.Password => AH.CreateSecureString(this.Password);
 
             public string GetSvnExePath()
             {

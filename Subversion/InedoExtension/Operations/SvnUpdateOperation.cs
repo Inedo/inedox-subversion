@@ -21,9 +21,6 @@ Svn-Update(
 ")]
     public sealed class SvnUpdateOperation : SvnOperation
     {
-        [ScriptAlias("Credentials")]
-        [DisplayName("Credentials")]
-        public override string CredentialName { get; set; }
         [ScriptAlias("DiskPath")]
         [DisplayName("Working copy directory")]
         [FilePathEditor]
@@ -34,7 +31,9 @@ Svn-Update(
         {
             this.LogInformation("Executing SVN update...");
 
-            var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
+            var (c, r) = this.GetCredentialsAndResource(context);
+
+            var client = new SvnClient(context, c, this.SvnExePath, this);
             var result = await client.UpdateAsync(context.ResolvePath(this.DiskPath), this.AdditionalArguments).ConfigureAwait(false);
 
             this.LogClientResult(result);

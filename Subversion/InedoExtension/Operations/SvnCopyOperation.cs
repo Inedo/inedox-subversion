@@ -30,9 +30,6 @@ Svn-Copy(
 ")]
     public sealed class SvnCopyOperation : SvnOperation
     {
-        [ScriptAlias("Credentials")]
-        [DisplayName("Credentials")]
-        public override string CredentialName { get; set; }
         [Required]
         [ScriptAlias("From")]
         [DisplayName("From path")]
@@ -52,9 +49,11 @@ Svn-Copy(
         {
             this.LogInformation("Executing SVN copy...");
 
-            var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
-            var sourcePath = new SvnPath(this.RespositoryUrl, this.SourcePath);
-            var destinationPath = new SvnPath(this.RespositoryUrl, this.DestinationPath);
+            var (c, r) = this.GetCredentialsAndResource(context);
+
+            var client = new SvnClient(context, c, this.SvnExePath, this);
+            var sourcePath = new SvnPath(r?.RepositoryUrl, this.SourcePath);
+            var destinationPath = new SvnPath(this.RepositoryUrl, this.DestinationPath);
             var result = await client.CopyAsync(sourcePath, destinationPath, this.Message, this.AdditionalArguments).ConfigureAwait(false);
 
             this.LogClientResult(result);

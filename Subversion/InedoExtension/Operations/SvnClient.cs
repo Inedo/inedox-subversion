@@ -9,6 +9,7 @@ using Inedo.Agents;
 using Inedo.Diagnostics;
 using Inedo.Extensibility.Agents;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensions.Credentials;
 using Inedo.Web;
 
 namespace Inedo.Extensions.Subversion
@@ -22,26 +23,26 @@ namespace Inedo.Extensions.Subversion
         private Lazy<IRemoteProcessExecuter> execOps;
         private ILogSink log;
 
-        public SvnClient(IOperationExecutionContext context, string userName, SecureString password, string svnExePath, ILogSink log)
-            : this(userName, password, context.Agent, svnExePath, log, context.CancellationToken)
+        public SvnClient(IOperationExecutionContext context, UsernamePasswordCredentials credentials, string svnExePath, ILogSink log)
+            : this(credentials, context.Agent, svnExePath, log, context.CancellationToken)
         {
         }
 
-        public SvnClient(string userName, SecureString password, Agent agent, string svnExePath, ILogSink log, CancellationToken? cancellationToken = null)
+        public SvnClient(UsernamePasswordCredentials credentials, Agent agent, string svnExePath, ILogSink log, CancellationToken? cancellationToken = null)
         {
             this.execOps = new Lazy<IRemoteProcessExecuter>(() => agent.GetService<IRemoteProcessExecuter>());
-            this.userName = userName;
-            this.password = password;
+            this.userName = credentials?.UserName;
+            this.password = credentials?.Password;
             this.svnExePath = AH.CoalesceString(svnExePath, RemoteMethods.GetEmbeddedSvnExePath(agent));
             this.log = log ?? (ILogSink)Logger.Null;
             this.cancellationToken = cancellationToken ?? CancellationToken.None;
         }
 
-        internal SvnClient(string userName, SecureString password, IRemoteProcessExecuter execOps, string svnExePath, ILogSink log, CancellationToken? cancellationToken = null)
+        internal SvnClient(UsernamePasswordCredentials credentials, IRemoteProcessExecuter execOps, string svnExePath, ILogSink log, CancellationToken? cancellationToken = null)
         {
             this.execOps = new Lazy<IRemoteProcessExecuter>(() => execOps);
-            this.userName = userName;
-            this.password = password;
+            this.userName = credentials?.UserName;
+            this.password = credentials?.Password;
             this.svnExePath = svnExePath;
             this.log = log ?? (ILogSink)Logger.Null;
             this.cancellationToken = cancellationToken ?? CancellationToken.None;

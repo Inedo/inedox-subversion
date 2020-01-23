@@ -24,12 +24,9 @@ Svn-Export(
 ")]
     public sealed class SvnExportOperation : SvnOperation
     {
-        [ScriptAlias("Credentials")]
-        [DisplayName("Credentials")]
-        public override string CredentialName { get; set; }
         [Required]
         [ScriptAlias("SourcePath")]
-        [DisplayName("Source path")]
+        [DisplayName("Source path")] 
         [BrowsablePath(typeof(SvnPathBrowser))]
         public string SourcePath { get; set; }
         [ScriptAlias("DiskPath")]
@@ -41,9 +38,9 @@ Svn-Export(
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
             this.LogInformation("Executing SVN export...");
-
-            var client = new SvnClient(context, this.UserName, this.Password, this.SvnExePath, this);
-            var sourcePath = new SvnPath(this.RespositoryUrl, this.SourcePath);
+            var (c, r) = this.GetCredentialsAndResource(context);
+            var client = new SvnClient(context, c, this.SvnExePath, this);
+            var sourcePath = new SvnPath(r?.RepositoryUrl, this.SourcePath);
             var result = await client.ExportAsync(sourcePath, context.ResolvePath(this.DestinationPath), this.AdditionalArguments).ConfigureAwait(false);
 
             this.LogClientResult(result);
