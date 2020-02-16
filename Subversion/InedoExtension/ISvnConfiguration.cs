@@ -4,7 +4,6 @@ using Inedo.Extensibility.Operations;
 using Inedo.Extensibility.RepositoryMonitors;
 using Inedo.Extensibility.SecureResources;
 using Inedo.Extensions.Subversion.Credentials;
-using Inedo.Web.Plans.ArgumentEditors;
 using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.Subversion
@@ -51,7 +50,7 @@ namespace Inedo.Extensions.Subversion
                 },
                 new SubversionSecureResource
                 {
-                    RepositoryUrl = config.RepositoryUrl
+                    RepositoryUrl = config.RepositoryUrl ?? resource.RepositoryUrl
                 }
             );
         }

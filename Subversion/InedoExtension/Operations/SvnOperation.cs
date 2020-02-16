@@ -14,7 +14,7 @@ namespace Inedo.Extensions.Subversion.Operations
     {
         [ScriptAlias("From")]
         [ScriptAlias("Credentials")]
-        [DisplayName("From GitHub resource")]
+        [DisplayName("From Svn resource")]
         [SuggestableValue(typeof(SecureResourceSuggestionProvider<SubversionSecureResource>))]
         public string ResourceName { get; set; }
 
