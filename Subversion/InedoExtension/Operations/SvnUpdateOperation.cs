@@ -4,6 +4,7 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.Web;
 using Inedo.Web.Plans.ArgumentEditors;
 
 namespace Inedo.Extensions.Subversion.Operations
@@ -23,7 +24,7 @@ Svn-Update(
     {
         [ScriptAlias("DiskPath")]
         [DisplayName("Working copy directory")]
-        [FilePathEditor]
+        [FieldEditMode(FieldEditMode.ServerDirectoryPath)]
         [PlaceholderText("$WorkingDirectory")]
         public string DiskPath { get; set; }
 

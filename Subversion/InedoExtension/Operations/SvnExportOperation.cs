@@ -31,7 +31,7 @@ Svn-Export(
         public string SourcePath { get; set; }
         [ScriptAlias("DiskPath")]
         [DisplayName("Export to directory")]
-        [FilePathEditor]
+        [FieldEditMode(FieldEditMode.ServerDirectoryPath)]
         [PlaceholderText("$WorkingDirectory")]
         public string DestinationPath { get; set; }
 

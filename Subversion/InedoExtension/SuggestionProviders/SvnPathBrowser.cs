@@ -46,7 +46,7 @@ namespace Inedo.Extensions.Subversion.SuggestionProviders
             public string RepositoryUrl => AH.CoalesceString(config[nameof(this.RepositoryUrl)], this.getCredentials.Value?.RepositoryUrl);
             public string UserName => AH.CoalesceString(config[nameof(this.UserName)], this.getCredentials.Value?.UserName);
             public string Password => AH.CoalesceString(config[nameof(this.Password)], AH.Unprotect(this.getCredentials.Value?.Password));
-            public int? ApplicationId => ((IBrowsablePathEditorContext)config.EditorContext).ProjectId;
+            public int? ApplicationId => AH.ParseInt(AH.CoalesceString(config["ProjectId"], config["ApplicationId"]));
 
             public string ResourceName => AH.CoalesceString(this.config["CredentialName"], this.config["From"]);
             SecureString ISvnConfiguration.Password => AH.CreateSecureString(this.Password);
