@@ -32,7 +32,7 @@ namespace Inedo.Extensions.Subversion
                 resource = (SubversionSecureResource)SecureResource.TryCreate(config.ResourceName, context);
                 if (resource == null)
                 {
-                    var rc = SecureCredentials.TryCreate(config.ResourceName, context) as SubversionCredentials;
+                    var rc = SecureCredentials.TryCreate(config.ResourceName, context) as SubversionLegacyCredentials;
                     resource = (SubversionSecureResource)rc?.ToSecureResource();
                     credentials = (UsernamePasswordCredentials)rc?.ToSecureCredentials();
                 }

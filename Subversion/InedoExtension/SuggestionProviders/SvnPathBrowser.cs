@@ -34,12 +34,12 @@ namespace Inedo.Extensions.Subversion.SuggestionProviders
         private sealed class PathBrowserInfo : ISvnConfiguration
         {
             private IComponentConfiguration config;
-            private Lazy<SubversionCredentials> getCredentials;
+            private Lazy<SubversionLegacyCredentials> getCredentials;
 
             public PathBrowserInfo(IComponentConfiguration config)
             {
                 this.config = config;
-                this.getCredentials = new Lazy<SubversionCredentials>(GetCredentials);
+                this.getCredentials = new Lazy<SubversionLegacyCredentials>(GetCredentials);
             }
 
             public string SourcePath => config[nameof(this.SourcePath)];
@@ -60,13 +60,13 @@ namespace Inedo.Extensions.Subversion.SuggestionProviders
                 return PathEx.Combine(PathEx.GetDirectoryName(typeof(RemoteMethods).Assembly.Location), "Resources", "svn.exe");
             }
 
-            private SubversionCredentials GetCredentials()
+            private SubversionLegacyCredentials GetCredentials()
             {
                 string credentialName = this.config["CredentialName"];
                 if (string.IsNullOrEmpty(credentialName))
                     return null;
 
-                return ResourceCredentials.Create<SubversionCredentials>(credentialName);
+                return ResourceCredentials.Create<SubversionLegacyCredentials>(credentialName);
             }
         }
 

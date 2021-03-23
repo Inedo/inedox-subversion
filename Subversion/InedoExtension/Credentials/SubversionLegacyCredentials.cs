@@ -10,10 +10,11 @@ using Inedo.Web;
 namespace Inedo.Extensions.Subversion.Credentials
 {
     [ScriptAlias("Subversion")]
-    [DisplayName("Subversion")]
+    [DisplayName("Subversion (Legacy)")]
     [Description("Credentials for Subversion.")]
     [PersistFrom("Inedo.BuildMasterExtensions.Subversion.Credentials.SubversionCredentials,Subversion")]
-    public sealed class SubversionCredentials : ResourceCredentials
+    [PersistFrom("Inedo.Extensions.Subversion.Credentials.SubversionCredentials,Subversion")]
+    public sealed class SubversionLegacyCredentials : ResourceCredentials
     {
         [Required]
         [Persistent]
