@@ -4,8 +4,6 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
-using Inedo.Extensions.Subversion.SuggestionProviders;
-using Inedo.Web;
 
 namespace Inedo.Extensions.Subversion.Operations
 {
@@ -33,12 +31,10 @@ Svn-Copy(
         [Required]
         [ScriptAlias("From")]
         [DisplayName("From path")]
-        [BrowsablePath(typeof(SvnPathBrowser))]
         public string SourcePath { get; set; }
         [Required]
         [ScriptAlias("To")]
         [DisplayName("To path")]
-        [BrowsablePath(typeof(SvnPathBrowser))]
         public string DestinationPath { get; set; }
         [Required]
         [ScriptAlias("Message")]
