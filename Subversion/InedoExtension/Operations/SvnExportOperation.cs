@@ -4,7 +4,6 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
-using Inedo.Extensions.Subversion.SuggestionProviders;
 using Inedo.Web;
 using Inedo.Web.Plans.ArgumentEditors;
 
@@ -26,12 +25,11 @@ Svn-Export(
     {
         [Required]
         [ScriptAlias("SourcePath")]
-        [DisplayName("Source path")] 
-        [BrowsablePath(typeof(SvnPathBrowser))]
+        [DisplayName("Source path")]
         public string SourcePath { get; set; }
         [ScriptAlias("DiskPath")]
         [DisplayName("Export to directory")]
-        [FilePathEditor]
+        [FieldEditMode(FieldEditMode.ServerDirectoryPath)]
         [PlaceholderText("$WorkingDirectory")]
         public string DestinationPath { get; set; }
 

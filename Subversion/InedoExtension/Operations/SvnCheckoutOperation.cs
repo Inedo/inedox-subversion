@@ -4,9 +4,7 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
-using Inedo.Extensions.Subversion.SuggestionProviders;
 using Inedo.Web;
-using Inedo.Web.Plans.ArgumentEditors;
 
 namespace Inedo.Extensions.Subversion.Operations
 {
@@ -27,11 +25,10 @@ Svn-Checkout(
         [ScriptAlias("SourcePath")]
         [DisplayName("Source path")]
         [PlaceholderText("Repository root")]
-        [BrowsablePath(typeof(SvnPathBrowser))]
         public string SourcePath { get; set; }
         [ScriptAlias("DiskPath")]
         [DisplayName("Working copy directory")]
-        [FilePathEditor]
+        [FieldEditMode(FieldEditMode.ServerDirectoryPath)]
         [PlaceholderText("$WorkingDirectory")]
         public string DestinationPath { get; set; }
         [Output]

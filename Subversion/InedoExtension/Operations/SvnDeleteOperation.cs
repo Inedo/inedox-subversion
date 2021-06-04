@@ -4,8 +4,6 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
-using Inedo.Extensions.Subversion.SuggestionProviders;
-using Inedo.Web;
 
 namespace Inedo.Extensions.Subversion.Operations
 {
@@ -18,7 +16,6 @@ namespace Inedo.Extensions.Subversion.Operations
         [Required]
         [ScriptAlias("Path")]
         [DisplayName("File path")]
-        [BrowsablePath(typeof(SvnPathBrowser))]
         public string Path { get; set; }
         [Required]
         [ScriptAlias("Message")]
