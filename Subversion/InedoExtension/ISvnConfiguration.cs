@@ -1,10 +1,9 @@
 ﻿using System.Security;
 using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
-using Inedo.Extensibility.RepositoryMonitors;
 using Inedo.Extensibility.SecureResources;
+using Inedo.Extensions.Credentials;
 using Inedo.Extensions.Subversion.Credentials;
-using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.Subversion
 {
@@ -20,8 +19,6 @@ namespace Inedo.Extensions.Subversion
     {
         public static (UsernamePasswordCredentials, SubversionSecureResource) GetCredentialsAndResource(this ISvnConfiguration config, IOperationExecutionContext context)
             => config.GetCredentialsAndResource(context as ICredentialResolutionContext);
-        public static (UsernamePasswordCredentials, SubversionSecureResource) GetCredentialsAndResource(this ISvnConfiguration config, IRepositoryMonitorContext context)
-            => config.GetCredentialsAndResource(context as ICredentialResolutionContext);
 
         public static (UsernamePasswordCredentials, SubversionSecureResource) GetCredentialsAndResource(this ISvnConfiguration config, ICredentialResolutionContext context)
         {
@@ -30,16 +27,7 @@ namespace Inedo.Extensions.Subversion
             if (!string.IsNullOrEmpty(config.ResourceName))
             {
                 resource = (SubversionSecureResource)SecureResource.TryCreate(config.ResourceName, context);
-                if (resource == null)
-                {
-                    var rc = SecureCredentials.TryCreate(config.ResourceName, context) as SubversionLegacyCredentials;
-                    resource = (SubversionSecureResource)rc?.ToSecureResource();
-                    credentials = (UsernamePasswordCredentials)rc?.ToSecureCredentials();
-                }
-                else
-                {
-                    credentials = (UsernamePasswordCredentials)resource.GetCredentials(context);
-                }
+                credentials = (UsernamePasswordCredentials)resource.GetCredentials(context);
             }
 
             return (

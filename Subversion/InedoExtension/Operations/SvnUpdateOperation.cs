@@ -5,7 +5,6 @@ using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
 using Inedo.Web;
-using Inedo.Web.Plans.ArgumentEditors;
 
 namespace Inedo.Extensions.Subversion.Operations
 {

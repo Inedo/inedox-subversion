@@ -4,3 +4,4 @@ obj
 *.suo
 *.user
 .vs
+/.config/dotnet-tools.json

@@ -2,8 +2,8 @@
   <PropertyGroup>
     <AssemblyName>Subversion</AssemblyName>
     <RootNamespace>Inedo.Extensions.Subversion</RootNamespace>
-    <TargetFrameworks>net50;net452</TargetFrameworks>
     <OutputType>Library</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -60,13 +60,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup >
-    <PackageReference Include="Inedo.SDK" Version="1.11.0" >
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework) == 'net452'">
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    
+  <ItemGroup>
+    <PackageReference Include="Inedo.SDK" Version="2.2.0-ci.84" />
   </ItemGroup>
 </Project>

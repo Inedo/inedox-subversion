@@ -208,7 +208,7 @@ namespace Inedo.Extensions.Subversion
     }
 
     [Serializable]
-    internal sealed class SvnPath : IPathInfo
+    internal sealed class SvnPath
     {
         public SvnPath(string repositoryUrl, string relativePath)
         {
@@ -232,9 +232,6 @@ namespace Inedo.Extensions.Subversion
         public string RepositoryRelativePath { get; }
         public string AbsolutePath => this.RepositoryUrl.TrimEnd('/') + '/' + this.RepositoryRelativePath;
         public bool IsDirectory => this.RepositoryRelativePath.EndsWith("/");
-
-        string IPathInfo.DisplayName => this.RepositoryRelativePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? "";
-        string IPathInfo.FullPath => this.RepositoryRelativePath;
 
         public override string ToString() => this.AbsolutePath;
     }

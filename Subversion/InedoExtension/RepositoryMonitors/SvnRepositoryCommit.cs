@@ -1,36 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using Inedo.Documentation;
 using Inedo.ExecutionEngine;
 using Inedo.Extensibility.RepositoryMonitors;
+using Inedo.Extensibility.ResourceMonitors;
 using Inedo.Serialization;
 
 namespace Inedo.Extensions.Subversion.RepositoryMonitors
 {
     [Serializable]
-    internal sealed class SvnRepositoryCommit : RepositoryCommit
+    public sealed class SvnRepositoryState : ResourceMonitorState
     {
         [Persistent]
         public string Revision { get; set; }
 
-        public override bool Equals(RepositoryCommit other)
+        public override bool Equals(ResourceMonitorState other)
         {
-            if (!(other is SvnRepositoryCommit svnCommit))
+            if (other is not SvnRepositoryState svnCommit)
                 return false;
 
             return string.Equals(this.Revision, svnCommit.Revision, StringComparison.OrdinalIgnoreCase);
         }
-        public override int GetHashCode() => StringComparer.OrdinalIgnoreCase.GetHashCode(this.Revision);
 
-        public override string GetFriendlyDescription() => this.ToString();
-
-        public override string ToString() => this.Revision ?? string.Empty;
-
-        public override IReadOnlyDictionary<RuntimeVariableName, RuntimeValue> GetRuntimeVariables()
-        {
-            return new Dictionary<RuntimeVariableName, RuntimeValue>()
-            {
-                [new RuntimeVariableName("RevisionNumber", RuntimeValueType.Scalar)] = this.Revision
-            };
-        }
+        public override RichDescription GetDescription() => new (this.Revision ?? string.Empty);
     }
 }
