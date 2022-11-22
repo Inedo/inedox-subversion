@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
@@ -25,7 +26,7 @@ namespace Inedo.Extensions.Subversion.RepositoryMonitors
         [Description("Enter each path to monitor, one per line")]
         public string[] PathsToMonitor { get; set; }
 
-        public async override Task<IReadOnlyDictionary<string, ResourceMonitorState>> GetCurrentStatesAsync(IResourceMonitorContext context)
+        public async override Task<IReadOnlyDictionary<string, ResourceMonitorState>> GetCurrentStatesAsync(IResourceMonitorContext context, CancellationToken cancellationToken)
         {
             var r = (SubversionSecureResource)context.Resource;
             var c = r.GetCredentials(context) as UsernamePasswordCredentials;
@@ -47,7 +48,7 @@ namespace Inedo.Extensions.Subversion.RepositoryMonitors
                     request.Headers.Authorization = new AuthenticationHeaderValue("basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"{c.UserName}:{AH.Unprotect(c.Password)}")));
                 request.Content = new StringContent("<?xml version=\"1.0\" encoding=\"utf-8\"?><D:options xmlns:D=\"DAV:\"><D:activity-collection-set></D:activity-collection-set></D:options>");
 
-                using var response = await http.SendAsync(request);
+                using var response = await http.SendAsync(request, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                 {
                     var resp = response.Content.ReadAsStringAsync();

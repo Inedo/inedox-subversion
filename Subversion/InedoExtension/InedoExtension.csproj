@@ -61,6 +61,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Inedo.SDK" Version="2.2.0-ci.84" />
+    <PackageReference Include="Inedo.SDK" Version="2.2.0-ci.86" />
   </ItemGroup>
 </Project>

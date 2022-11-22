@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using Inedo.Documentation;
-using Inedo.ExecutionEngine;
-using Inedo.Extensibility.RepositoryMonitors;
 using Inedo.Extensibility.ResourceMonitors;
 using Inedo.Serialization;
 
@@ -23,5 +20,10 @@ namespace Inedo.Extensions.Subversion.RepositoryMonitors
         }
 
         public override RichDescription GetDescription() => new (this.Revision ?? string.Empty);
+
+        public override int GetHashCode()
+        {
+            return StringComparer.OrdinalIgnoreCase.GetHashCode(this.Revision ?? string.Empty);
+        }
     }
 }
