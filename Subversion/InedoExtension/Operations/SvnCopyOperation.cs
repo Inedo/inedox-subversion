@@ -29,7 +29,7 @@ Svn-Copy(
     public sealed class SvnCopyOperation : SvnOperation
     {
         [Required]
-        [ScriptAlias("From")]
+        [ScriptAlias("Source")]
         [DisplayName("From path")]
         public string SourcePath { get; set; }
         [Required]
