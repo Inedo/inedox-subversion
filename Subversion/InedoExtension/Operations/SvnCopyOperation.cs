@@ -31,10 +31,12 @@ Svn-Copy(
         [Required]
         [ScriptAlias("Source")]
         [DisplayName("From path")]
+        [Description("This is the path relative to the Repository URL")]
         public string SourcePath { get; set; }
         [Required]
         [ScriptAlias("To")]
         [DisplayName("To path")]
+        [Description("This is the path relative to the Repository URL.  All parent folders listed in the path must exist except the final child folder.")]
         public string DestinationPath { get; set; }
         [Required]
         [ScriptAlias("Message")]
@@ -49,7 +51,7 @@ Svn-Copy(
 
             var client = new SvnClient(context, c, this.SvnExePath, this);
             var sourcePath = new SvnPath(r?.RepositoryUrl, this.SourcePath);
-            var destinationPath = new SvnPath(this.RepositoryUrl, this.DestinationPath);
+            var destinationPath = new SvnPath(r?.RepositoryUrl, this.DestinationPath);
             var result = await client.CopyAsync(sourcePath, destinationPath, this.Message, this.AdditionalArguments).ConfigureAwait(false);
 
             this.LogClientResult(result);
