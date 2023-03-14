@@ -42,6 +42,9 @@ Svn-Copy(
         [ScriptAlias("Message")]
         [DisplayName("Log message")]
         public string Message { get; set; }
+        [ScriptAlias("RevisionNumber")]
+        [DisplayName("Revision number")]
+        public string RevisionNumber { get; set; }
 
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
@@ -52,7 +55,7 @@ Svn-Copy(
             var client = new SvnClient(context, c, this.SvnExePath, this);
             var sourcePath = new SvnPath(r?.RepositoryUrl, this.SourcePath);
             var destinationPath = new SvnPath(r?.RepositoryUrl, this.DestinationPath);
-            var result = await client.CopyAsync(sourcePath, destinationPath, this.Message, this.AdditionalArguments).ConfigureAwait(false);
+            var result = await client.CopyAsync(sourcePath, destinationPath, this.Message, this.AdditionalArguments, this.RevisionNumber).ConfigureAwait(false);
 
             this.LogClientResult(result);
 

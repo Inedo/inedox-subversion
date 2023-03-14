@@ -69,10 +69,12 @@ namespace Inedo.Extensions.Subversion
             return await this.ExecuteCommandLineAsync(args).ConfigureAwait(false);
         }
 
-        public async Task<SvnClientExecutionResult> ExportAsync(SvnPath sourcePath, string destinationDirectory, string additionalArguments)
+        public async Task<SvnClientExecutionResult> ExportAsync(SvnPath sourcePath, string destinationDirectory, string additionalArguments, string revision = null)
         {
             var args = new SvnArgumentBuilder();
             args.Append("export");
+            if (!string.IsNullOrWhiteSpace(revision))
+                args.Append($"-r {revision}");
             args.AppendQuoted(sourcePath.AbsolutePath);
             args.AppendQuoted(destinationDirectory);
             args.Append(additionalArguments);
@@ -80,10 +82,12 @@ namespace Inedo.Extensions.Subversion
             return await this.ExecuteCommandLineAsync(args).ConfigureAwait(false);
         }
 
-        public async Task<SvnClientExecutionResult> CopyAsync(SvnPath sourcePath, SvnPath destinationPath, string message, string additionalArguments)
+        public async Task<SvnClientExecutionResult> CopyAsync(SvnPath sourcePath, SvnPath destinationPath, string message, string additionalArguments, string revision = null)
         {
             var args = new SvnArgumentBuilder();
             args.Append("copy");
+            if (!string.IsNullOrWhiteSpace(revision))
+                args.Append($"-r {revision}");
             args.AppendQuoted(sourcePath.AbsolutePath);
             args.AppendQuoted(destinationPath.AbsolutePath);
             args.Append("-m");
