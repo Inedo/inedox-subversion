@@ -26,7 +26,7 @@ namespace Inedo.Extensions.Subversion
             SubversionSecureResource resource = null;
             if (!string.IsNullOrEmpty(config.ResourceName))
             {
-                resource = (SubversionSecureResource)SecureResource.TryCreate(config.ResourceName, context);
+                resource = (SubversionSecureResource)SecureResource.TryCreate(SecureResourceType.General, config.ResourceName, context);
                 credentials = (UsernamePasswordCredentials)resource.GetCredentials(context);
             }
 
